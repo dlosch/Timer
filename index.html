@@ -515,10 +515,6 @@
                         console.log('Wake Lock released');
                     });
                     console.log('Wake Lock acquired');
-                    // Still show video as additional fallback
-                    videoCanvas.style.display = 'block';
-                    const video = initNoSleepVideo();
-                    await video.play();
                     return;
                 } catch (err) {
                     console.log('Wake Lock error, trying fallback:', err);
