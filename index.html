@@ -248,6 +248,27 @@
             color: rgba(255, 255, 255, 0.6);
         }
 
+        .video-canvas {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 80px;
+            height: 120px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            display: none;
+        }
+
+        .video-canvas video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: bottom right;
+        }
+
         @media (max-width: 400px) {
             .timer-display {
                 width: 240px;
@@ -307,6 +328,10 @@
         </div>
     </div>
 
+    <div class="video-canvas" id="videoCanvas">
+        <video id="noSleepVideo" playsinline muted loop></video>
+    </div>
+
     <script>
         let timer = null;
         let totalSeconds = 0;
@@ -324,19 +349,8 @@
         const resetBtn = document.getElementById('resetBtn');
         const timePicker = document.getElementById('timePicker');
         const progressBar = document.querySelector('.progress-bar');
+        const videoCanvas = document.getElementById('videoCanvas');
         const circumference = 817;
-
-        // NoSleep video data for iOS - base64 encoded minimal MP4 video
-        const NOSLEEP_VIDEO_SRC = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMWlzb20AAAA' +
-            'VZ3RyYWNrAAAACGNzdG4AAAD/AAABAGZtZGlhAAAAIG1kaGQAAAAAAAAAAAAAAAAAAAABAAAAAAAAAP8AAAAAAAAAAAAA' +
-            'AAAAAGhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAAABQ29yZSBNZWRpYSBWaWRlbwAAAGZtaW5mAAAAFHZtaGQAAAAB' +
-            'AAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAABJzdGJsAAAAcnN0c2QAAAAAAAAAAQAA' +
-            'AGJhdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAQABAEgAAABIAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' +
-            'AAAAAAAAAAAY//8AAAAwYXZjQwFkAAr/4QAZZ2QACqy0AUAkAAMABAAAAwKgPGDGWAEABWjOAQ6gQAAAABBwYXNwAAAA' +
-            'AQAAAAEAAAAUYnRydAAAAAADYAAAA2QAAAAYc3R0cwAAAAAAAAABAAAAAgAAAQAAAAAYc3RzYwAAAAAAAAABAAAAAQAA' +
-            'AAIAAAABAAAAFHN0c3oAAAAAAAAAAwAAAA0AAAANAAAADHN0Y28AAAAAAAAAAQAAACgAAAAYc3RzYwAAAAAAAAABAAAA' +
-            'AQAAAAEAAAABc3RzcwAAAAAAAAABAAAAAgAAABBjdHRzAAAAAAAAAAEAAAABAAAAAQAAABRzdHNzAAAAAAAAAAEAAAAB' +
-            'AAAACnN0c2gAAAAAAA==';
 
         // Create audio context for beep sounds
         let audioContext = null;
@@ -483,14 +497,10 @@
         }
 
         // iOS Screen Wake Lock workaround using video element
-        function createNoSleepVideo() {
+        function initNoSleepVideo() {
             if (!noSleepVideo) {
-                noSleepVideo = document.createElement('video');
-                noSleepVideo.setAttribute('playsinline', '');
-                noSleepVideo.setAttribute('muted', '');
-                noSleepVideo.style.display = 'none';
-                noSleepVideo.src = NOSLEEP_VIDEO_SRC;
-                document.body.appendChild(noSleepVideo);
+                noSleepVideo = document.getElementById('noSleepVideo');
+                noSleepVideo.src = 'video.mp4';
             }
             return noSleepVideo;
         }
@@ -505,6 +515,10 @@
                         console.log('Wake Lock released');
                     });
                     console.log('Wake Lock acquired');
+                    // Still show video as additional fallback
+                    videoCanvas.style.display = 'block';
+                    const video = initNoSleepVideo();
+                    await video.play();
                     return;
                 } catch (err) {
                     console.log('Wake Lock error, trying fallback:', err);
@@ -513,7 +527,8 @@
             
             // Fallback for iOS and other browsers: use video element
             try {
-                const video = createNoSleepVideo();
+                videoCanvas.style.display = 'block';
+                const video = initNoSleepVideo();
                 await video.play();
                 console.log('NoSleep video playing');
             } catch (err) {
@@ -532,10 +547,11 @@
                 }
             }
             
-            // Stop video fallback
+            // Stop video fallback and hide canvas
             if (noSleepVideo) {
                 try {
                     noSleepVideo.pause();
+                    videoCanvas.style.display = 'none';
                 } catch (err) {
                     console.error('NoSleep video pause error:', err);
                 }
