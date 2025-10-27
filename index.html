@@ -473,7 +473,7 @@
 
         // Request wake lock to keep screen on
         async function requestWakeLock() {
-            // Try standard Wake Lock API first
+            // Try standard Wake Lock API
             if ('wakeLock' in navigator) {
                 try {
                     wakeLock = await navigator.wakeLock.request('screen');
@@ -481,18 +481,9 @@
                         console.log('Wake Lock released');
                     });
                     console.log('Wake Lock acquired');
-                    return;
                 } catch (err) {
-                    console.log('Wake Lock error, trying fallback:', err);
+                    console.log('Wake Lock error:', err);
                 }
-            }
-            
-            // Fallback for iOS and other browsers: use NoSleep.js
-            try {
-                noSleep.enable();
-                console.log('NoSleep enabled');
-            } catch (err) {
-                console.error('NoSleep error:', err);
             }
         }
 
@@ -505,14 +496,6 @@
                 } catch (err) {
                     console.error('Wake Lock release error:', err);
                 }
-            }
-            
-            // Disable NoSleep fallback
-            try {
-                noSleep.disable();
-                console.log('NoSleep disabled');
-            } catch (err) {
-                console.error('NoSleep disable error:', err);
             }
         }
 
@@ -529,6 +512,9 @@
             if (audioContext && audioContext.state === 'suspended') {
                 audioContext.resume();
             }
+
+            // Enable NoSleep on user interaction
+            noSleep.enable();
 
             requestWakeLock();
             
@@ -559,6 +545,7 @@
             clearInterval(timer);
             timer = null;
             releaseWakeLock();
+            noSleep.disable();
             
             startBtn.classList.remove('hidden');
             pauseBtn.classList.add('hidden');
@@ -569,6 +556,7 @@
             clearInterval(timer);
             timer = null;
             releaseWakeLock();
+            noSleep.disable();
             
             startBtn.classList.remove('hidden');
             pauseBtn.classList.add('hidden');
