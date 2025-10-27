@@ -326,6 +326,18 @@
         const progressBar = document.querySelector('.progress-bar');
         const circumference = 817;
 
+        // NoSleep video data for iOS - base64 encoded minimal MP4 video
+        const NOSLEEP_VIDEO_SRC = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMWlzb20AAAA' +
+            'VZ3RyYWNrAAAACGNzdG4AAAD/AAABAGZtZGlhAAAAIG1kaGQAAAAAAAAAAAAAAAAAAAABAAAAAAAAAP8AAAAAAAAAAAAA' +
+            'AAAAAGhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAAABQ29yZSBNZWRpYSBWaWRlbwAAAGZtaW5mAAAAFHZtaGQAAAAB' +
+            'AAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAABJzdGJsAAAAcnN0c2QAAAAAAAAAAQAA' +
+            'AGJhdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAQABAEgAAABIAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' +
+            'AAAAAAAAAAAY//8AAAAwYXZjQwFkAAr/4QAZZ2QACqy0AUAkAAMABAAAAwKgPGDGWAEABWjOAQ6gQAAAABBwYXNwAAAA' +
+            'AQAAAAEAAAAUYnRydAAAAAADYAAAA2QAAAAYc3R0cwAAAAAAAAABAAAAAgAAAQAAAAAYc3RzYwAAAAAAAAABAAAAAQAA' +
+            'AAIAAAABAAAAFHN0c3oAAAAAAAAAAwAAAA0AAAANAAAADHN0Y28AAAAAAAAAAQAAACgAAAAYc3RzYwAAAAAAAAABAAAA' +
+            'AQAAAAEAAAABc3RzcwAAAAAAAAABAAAAAgAAABBjdHRzAAAAAAAAAAEAAAABAAAAAQAAABRzdHNzAAAAAAAAAAEAAAAB' +
+            'AAAACnN0c2gAAAAAAA==';
+
         // Create audio context for beep sounds
         let audioContext = null;
 
@@ -336,8 +348,8 @@
             return audioContext;
         }
 
-        // Play beep sound
-        function playBeep(duration = 200, frequency = 800) {
+        // Helper to create and play a beep sound
+        function createBeep(frequency, duration) {
             const ctx = getAudioContext();
             const oscillator = ctx.createOscillator();
             const gainNode = ctx.createGain();
@@ -349,34 +361,38 @@
             oscillator.type = 'sine';
 
             gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration / 1000);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
 
             oscillator.start(ctx.currentTime);
-            oscillator.stop(ctx.currentTime + duration / 1000);
+            oscillator.stop(ctx.currentTime + duration);
+        }
+
+        // Play beep sound
+        function playBeep(duration = 0.1, frequency = 600) {
+            createBeep(frequency, duration);
         }
 
         // Play long completion beep
         function playCompletionBeep() {
-            const ctx = getAudioContext();
-            const oscillator = ctx.createOscillator();
-            const gainNode = ctx.createGain();
-
-            oscillator.connect(gainNode);
-            gainNode.connect(ctx.destination);
-
-            oscillator.frequency.value = 880;
-            oscillator.type = 'sine';
-
-            gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1);
-
-            oscillator.start(ctx.currentTime);
-            oscillator.stop(ctx.currentTime + 1);
+            createBeep(880, 1);
 
             // Also vibrate if available
             if ('vibrate' in navigator) {
                 navigator.vibrate([200, 100, 200, 100, 200]);
             }
+        }
+
+        // Helper function to setup picker scroll handler
+        function setupPickerScrollHandler(picker, valueSetter) {
+            let scrollTimeout;
+            picker.addEventListener('scroll', () => {
+                clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(() => {
+                    const value = getPickerValue(picker);
+                    valueSetter(value);
+                    updatePickerHighlight(picker);
+                }, 100);
+            });
         }
 
         // Initialize scroll pickers
@@ -404,23 +420,8 @@
             updatePickerScroll(secondsPicker, selectedSeconds);
 
             // Add scroll event listeners
-            let minutesScrollTimeout;
-            minutesPicker.addEventListener('scroll', () => {
-                clearTimeout(minutesScrollTimeout);
-                minutesScrollTimeout = setTimeout(() => {
-                    selectedMinutes = getPickerValue(minutesPicker);
-                    updatePickerHighlight(minutesPicker);
-                }, 100);
-            });
-
-            let secondsScrollTimeout;
-            secondsPicker.addEventListener('scroll', () => {
-                clearTimeout(secondsScrollTimeout);
-                secondsScrollTimeout = setTimeout(() => {
-                    selectedSeconds = getPickerValue(secondsPicker);
-                    updatePickerHighlight(secondsPicker);
-                }, 100);
-            });
+            setupPickerScrollHandler(minutesPicker, (value) => { selectedMinutes = value; });
+            setupPickerScrollHandler(secondsPicker, (value) => { selectedSeconds = value; });
 
             // Initial highlight
             updatePickerHighlight(minutesPicker);
@@ -488,8 +489,7 @@
                 noSleepVideo.setAttribute('playsinline', '');
                 noSleepVideo.setAttribute('muted', '');
                 noSleepVideo.style.display = 'none';
-                // Create a tiny video that loops
-                noSleepVideo.src = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMWlzb20AAAAVZ3RyYWNrAAAACGNzdG4AAAD/AAABAGZtZGlhAAAAIG1kaGQAAAAAAAAAAAAAAAAAAAABAAAAAAAAAP8AAAAAAAAAAAAAAAAAAAAgaGRscgAAAAAAAAAAdmlkZQAAAAAAAAAAAAAAAABDb3JlIE1lZGlhIFZpZGVvAAAAZm1pbmYAAAAUdm1oZAAAAAEAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAABJzdGJsAAAAcnN0c2QAAAAAAAAAAQAAAGJhdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAQABAEgAAABIAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY//8AAAAwYXZjQwFkAAr/4QAZZ2QACqy0AUAkAAMABAAAAwKgPGDGWAEABWjOAQ6gQAAAABBwYXNwAAAAAQAAAAEAAAAUYnRydAAAAAADYAAAA2QAAAAYc3R0cwAAAAAAAAABAAAAAgAAAQAAAAAYc3RzYwAAAAAAAAABAAAAAQAAAAIAAAABAAAAFHN0c3oAAAAAAAAAAwAAAA0AAAANAAAADHN0Y28AAAAAAAAAAQAAACgAAAAYc3RzYwAAAAAAAAABAAAAAQAAAAEAAAABc3RzcwAAAAAAAAABAAAAAgAAABBjdHRzAAAAAAAAAAEAAAABAAAAAQAAABRzdHNzAAAAAAAAAAEAAAABAAAACnN0c2gAAAAAAA==';
+                noSleepVideo.src = NOSLEEP_VIDEO_SRC;
                 document.body.appendChild(noSleepVideo);
             }
             return noSleepVideo;
@@ -570,7 +570,7 @@
 
                 // Play countdown beeps at 5, 4, 3, 2, 1 seconds
                 if (remainingSeconds > 0 && remainingSeconds <= 5) {
-                    playBeep(100, 600);
+                    playBeep();
                 }
 
                 if (remainingSeconds <= 0) {
@@ -628,11 +628,14 @@
         });
 
         // Resume audio context on user interaction (required by some browsers)
-        document.addEventListener('touchstart', () => {
+        function resumeAudioContext() {
             if (audioContext && audioContext.state === 'suspended') {
                 audioContext.resume();
             }
-        }, { once: true });
+        }
+        
+        document.addEventListener('touchstart', resumeAudioContext, { once: true });
+        document.addEventListener('click', resumeAudioContext, { once: true });
     </script>
 </body>
 </html>
