@@ -103,23 +103,78 @@
             letter-spacing: 1px;
         }
 
-        .time-input input {
+        .picker-container {
             width: 80px;
-            height: 50px;
+            height: 120px;
             background: rgba(0, 0, 0, 0.3);
             border: 2px solid rgba(255, 255, 255, 0.2);
             border-radius: 12px;
-            color: #ffffff;
-            font-size: 28px;
-            text-align: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .picker-container::before,
+        .picker-container::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 40px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .picker-container::before {
+            top: 0;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), transparent);
+        }
+
+        .picker-container::after {
+            bottom: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+        }
+
+        .picker-scroll {
+            height: 100%;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding: 40px 0;
+        }
+
+        .picker-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .picker-item {
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 24px;
             font-weight: 300;
-            outline: none;
+            scroll-snap-align: center;
             transition: all 0.2s;
         }
 
-        .time-input input:focus {
-            border-color: #ff9500;
-            background: rgba(0, 0, 0, 0.5);
+        .picker-item.active {
+            color: #ffffff;
+            font-size: 28px;
+        }
+
+        .picker-highlight {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 40px;
+            transform: translateY(-50%);
+            border-top: 1px solid rgba(255, 149, 0, 0.3);
+            border-bottom: 1px solid rgba(255, 149, 0, 0.3);
+            pointer-events: none;
+            z-index: 2;
         }
 
         .controls {
@@ -230,12 +285,18 @@
         <div class="time-picker" id="timePicker">
             <div class="time-input">
                 <label>Minutes</label>
-                <input type="number" id="minutesInput" min="0" max="99" value="5">
+                <div class="picker-container">
+                    <div class="picker-highlight"></div>
+                    <div class="picker-scroll" id="minutesPicker"></div>
+                </div>
             </div>
             <span class="separator">:</span>
             <div class="time-input">
                 <label>Seconds</label>
-                <input type="number" id="secondsInput" min="0" max="59" value="0">
+                <div class="picker-container">
+                    <div class="picker-highlight"></div>
+                    <div class="picker-scroll" id="secondsPicker"></div>
+                </div>
             </div>
         </div>
 
@@ -251,16 +312,154 @@
         let totalSeconds = 0;
         let remainingSeconds = 0;
         let wakeLock = null;
+        let noSleepVideo = null;
+        let selectedMinutes = 5;
+        let selectedSeconds = 0;
 
         const timeDisplay = document.getElementById('timeDisplay');
-        const minutesInput = document.getElementById('minutesInput');
-        const secondsInput = document.getElementById('secondsInput');
+        const minutesPicker = document.getElementById('minutesPicker');
+        const secondsPicker = document.getElementById('secondsPicker');
         const startBtn = document.getElementById('startBtn');
         const pauseBtn = document.getElementById('pauseBtn');
         const resetBtn = document.getElementById('resetBtn');
         const timePicker = document.getElementById('timePicker');
         const progressBar = document.querySelector('.progress-bar');
         const circumference = 817;
+
+        // Create audio context for beep sounds
+        let audioContext = null;
+
+        function getAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            return audioContext;
+        }
+
+        // Play beep sound
+        function playBeep(duration = 200, frequency = 800) {
+            const ctx = getAudioContext();
+            const oscillator = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(ctx.destination);
+
+            oscillator.frequency.value = frequency;
+            oscillator.type = 'sine';
+
+            gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration / 1000);
+
+            oscillator.start(ctx.currentTime);
+            oscillator.stop(ctx.currentTime + duration / 1000);
+        }
+
+        // Play long completion beep
+        function playCompletionBeep() {
+            const ctx = getAudioContext();
+            const oscillator = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(ctx.destination);
+
+            oscillator.frequency.value = 880;
+            oscillator.type = 'sine';
+
+            gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1);
+
+            oscillator.start(ctx.currentTime);
+            oscillator.stop(ctx.currentTime + 1);
+
+            // Also vibrate if available
+            if ('vibrate' in navigator) {
+                navigator.vibrate([200, 100, 200, 100, 200]);
+            }
+        }
+
+        // Initialize scroll pickers
+        function initializePickers() {
+            // Minutes picker (0-99)
+            for (let i = 0; i <= 99; i++) {
+                const item = document.createElement('div');
+                item.className = 'picker-item';
+                item.textContent = String(i).padStart(2, '0');
+                item.dataset.value = i;
+                minutesPicker.appendChild(item);
+            }
+
+            // Seconds picker (0-59)
+            for (let i = 0; i <= 59; i++) {
+                const item = document.createElement('div');
+                item.className = 'picker-item';
+                item.textContent = String(i).padStart(2, '0');
+                item.dataset.value = i;
+                secondsPicker.appendChild(item);
+            }
+
+            // Set initial scroll positions
+            updatePickerScroll(minutesPicker, selectedMinutes);
+            updatePickerScroll(secondsPicker, selectedSeconds);
+
+            // Add scroll event listeners
+            let minutesScrollTimeout;
+            minutesPicker.addEventListener('scroll', () => {
+                clearTimeout(minutesScrollTimeout);
+                minutesScrollTimeout = setTimeout(() => {
+                    selectedMinutes = getPickerValue(minutesPicker);
+                    updatePickerHighlight(minutesPicker);
+                }, 100);
+            });
+
+            let secondsScrollTimeout;
+            secondsPicker.addEventListener('scroll', () => {
+                clearTimeout(secondsScrollTimeout);
+                secondsScrollTimeout = setTimeout(() => {
+                    selectedSeconds = getPickerValue(secondsPicker);
+                    updatePickerHighlight(secondsPicker);
+                }, 100);
+            });
+
+            // Initial highlight
+            updatePickerHighlight(minutesPicker);
+            updatePickerHighlight(secondsPicker);
+        }
+
+        function updatePickerScroll(picker, value) {
+            const itemHeight = 40;
+            picker.scrollTop = value * itemHeight;
+        }
+
+        function getPickerValue(picker) {
+            const itemHeight = 40;
+            const scrollTop = picker.scrollTop;
+            return Math.round(scrollTop / itemHeight);
+        }
+
+        function updatePickerHighlight(picker) {
+            const items = picker.querySelectorAll('.picker-item');
+            const centerIndex = getPickerValue(picker);
+            
+            items.forEach((item, index) => {
+                if (index === centerIndex) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+
+        function disablePickers() {
+            minutesPicker.style.pointerEvents = 'none';
+            secondsPicker.style.pointerEvents = 'none';
+        }
+
+        function enablePickers() {
+            minutesPicker.style.pointerEvents = 'auto';
+            secondsPicker.style.pointerEvents = 'auto';
+        }
 
         // Format time display
         function formatTime(seconds) {
@@ -282,17 +481,43 @@
             updateProgress();
         }
 
+        // iOS Screen Wake Lock workaround using video element
+        function createNoSleepVideo() {
+            if (!noSleepVideo) {
+                noSleepVideo = document.createElement('video');
+                noSleepVideo.setAttribute('playsinline', '');
+                noSleepVideo.setAttribute('muted', '');
+                noSleepVideo.style.display = 'none';
+                // Create a tiny video that loops
+                noSleepVideo.src = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMWlzb20AAAAVZ3RyYWNrAAAACGNzdG4AAAD/AAABAGZtZGlhAAAAIG1kaGQAAAAAAAAAAAAAAAAAAAABAAAAAAAAAP8AAAAAAAAAAAAAAAAAAAAgaGRscgAAAAAAAAAAdmlkZQAAAAAAAAAAAAAAAABDb3JlIE1lZGlhIFZpZGVvAAAAZm1pbmYAAAAUdm1oZAAAAAEAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAABJzdGJsAAAAcnN0c2QAAAAAAAAAAQAAAGJhdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAQABAEgAAABIAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY//8AAAAwYXZjQwFkAAr/4QAZZ2QACqy0AUAkAAMABAAAAwKgPGDGWAEABWjOAQ6gQAAAABBwYXNwAAAAAQAAAAEAAAAUYnRydAAAAAADYAAAA2QAAAAYc3R0cwAAAAAAAAABAAAAAgAAAQAAAAAYc3RzYwAAAAAAAAABAAAAAQAAAAIAAAABAAAAFHN0c3oAAAAAAAAAAwAAAA0AAAANAAAADHN0Y28AAAAAAAAAAQAAACgAAAAYc3RzYwAAAAAAAAABAAAAAQAAAAEAAAABc3RzcwAAAAAAAAABAAAAAgAAABBjdHRzAAAAAAAAAAEAAAABAAAAAQAAABRzdHNzAAAAAAAAAAEAAAABAAAACnN0c2gAAAAAAA==';
+                document.body.appendChild(noSleepVideo);
+            }
+            return noSleepVideo;
+        }
+
         // Request wake lock to keep screen on
         async function requestWakeLock() {
+            // Try standard Wake Lock API first
             if ('wakeLock' in navigator) {
                 try {
                     wakeLock = await navigator.wakeLock.request('screen');
                     wakeLock.addEventListener('release', () => {
                         console.log('Wake Lock released');
                     });
+                    console.log('Wake Lock acquired');
+                    return;
                 } catch (err) {
-                    console.error('Wake Lock error:', err);
+                    console.log('Wake Lock error, trying fallback:', err);
                 }
+            }
+            
+            // Fallback for iOS and other browsers: use video element
+            try {
+                const video = createNoSleepVideo();
+                await video.play();
+                console.log('NoSleep video playing');
+            } catch (err) {
+                console.error('NoSleep video error:', err);
             }
         }
 
@@ -306,19 +531,30 @@
                     console.error('Wake Lock release error:', err);
                 }
             }
+            
+            // Stop video fallback
+            if (noSleepVideo) {
+                try {
+                    noSleepVideo.pause();
+                } catch (err) {
+                    console.error('NoSleep video pause error:', err);
+                }
+            }
         }
 
         // Start timer
         function startTimer() {
-            const minutes = parseInt(minutesInput.value) || 0;
-            const seconds = parseInt(secondsInput.value) || 0;
-            
             if (remainingSeconds === 0) {
-                totalSeconds = minutes * 60 + seconds;
+                totalSeconds = selectedMinutes * 60 + selectedSeconds;
                 remainingSeconds = totalSeconds;
             }
 
             if (remainingSeconds <= 0) return;
+
+            // Enable audio context on user interaction
+            if (audioContext && audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
 
             requestWakeLock();
             
@@ -326,16 +562,20 @@
             pauseBtn.classList.remove('hidden');
             resetBtn.disabled = false;
             timePicker.style.opacity = '0.5';
-            minutesInput.disabled = true;
-            secondsInput.disabled = true;
+            disablePickers();
 
             timer = setInterval(() => {
                 remainingSeconds--;
                 updateDisplay();
 
+                // Play countdown beeps at 5, 4, 3, 2, 1 seconds
+                if (remainingSeconds > 0 && remainingSeconds <= 5) {
+                    playBeep(100, 600);
+                }
+
                 if (remainingSeconds <= 0) {
                     stopTimer();
-                    playSound();
+                    playCompletionBeep();
                 }
             }, 1000);
         }
@@ -368,15 +608,7 @@
             updateDisplay();
             resetBtn.disabled = true;
             timePicker.style.opacity = '1';
-            minutesInput.disabled = false;
-            secondsInput.disabled = false;
-        }
-
-        // Play completion sound (vibrate on mobile)
-        function playSound() {
-            if ('vibrate' in navigator) {
-                navigator.vibrate([200, 100, 200, 100, 200]);
-            }
+            enablePickers();
         }
 
         // Event listeners
@@ -384,26 +616,23 @@
         pauseBtn.addEventListener('click', pauseTimer);
         resetBtn.addEventListener('click', resetTimer);
 
-        // Input validation
-        minutesInput.addEventListener('input', function() {
-            if (this.value > 99) this.value = 99;
-            if (this.value < 0) this.value = 0;
-        });
-
-        secondsInput.addEventListener('input', function() {
-            if (this.value > 59) this.value = 59;
-            if (this.value < 0) this.value = 0;
-        });
-
-        // Initialize display
+        // Initialize
+        initializePickers();
         updateDisplay();
 
         // Handle page visibility changes to re-request wake lock if needed
         document.addEventListener('visibilitychange', async () => {
-            if (wakeLock && document.visibilityState === 'visible') {
+            if (timer && document.visibilityState === 'visible') {
                 await requestWakeLock();
             }
         });
+
+        // Resume audio context on user interaction (required by some browsers)
+        document.addEventListener('touchstart', () => {
+            if (audioContext && audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+        }, { once: true });
     </script>
 </body>
 </html>
