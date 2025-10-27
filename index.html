@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Timer">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon.png">
+    <title>Timer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #ffffff;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .timer-display {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .circular-progress {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .progress-bg {
+            fill: none;
+            stroke: #3a3a3a;
+            stroke-width: 8;
+        }
+
+        .progress-bar {
+            fill: none;
+            stroke: #ff9500;
+            stroke-width: 8;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.3s linear;
+        }
+
+        .time-text {
+            font-size: 56px;
+            font-weight: 300;
+            letter-spacing: -2px;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .time-picker {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .time-input {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .time-input label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .time-input input {
+            width: 80px;
+            height: 50px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 28px;
+            text-align: center;
+            font-weight: 300;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .time-input input:focus {
+            border-color: #ff9500;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .controls {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: none;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            outline: none;
+        }
+
+        .btn-start {
+            background: #ff9500;
+            color: #ffffff;
+            width: 100px;
+            height: 100px;
+            font-size: 18px;
+        }
+
+        .btn-start:active {
+            transform: scale(0.95);
+            opacity: 0.8;
+        }
+
+        .btn-pause {
+            background: #ff9500;
+            color: #ffffff;
+            width: 100px;
+            height: 100px;
+            font-size: 18px;
+        }
+
+        .btn-pause:active {
+            transform: scale(0.95);
+            opacity: 0.8;
+        }
+
+        .btn-reset {
+            background: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+        }
+
+        .btn-reset:active {
+            transform: scale(0.95);
+            opacity: 0.8;
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .separator {
+            font-size: 28px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        @media (max-width: 400px) {
+            .timer-display {
+                width: 240px;
+                height: 240px;
+            }
+
+            .time-text {
+                font-size: 48px;
+            }
+
+            .btn-start, .btn-pause {
+                width: 80px;
+                height: 80px;
+            }
+
+            .btn {
+                width: 60px;
+                height: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="timer-display">
+            <svg class="circular-progress" viewBox="0 0 280 280">
+                <circle class="progress-bg" cx="140" cy="140" r="130"></circle>
+                <circle class="progress-bar" cx="140" cy="140" r="130" 
+                        stroke-dasharray="817" 
+                        stroke-dashoffset="817"></circle>
+            </svg>
+            <div class="time-text" id="timeDisplay">00:00</div>
+        </div>
+
+        <div class="time-picker" id="timePicker">
+            <div class="time-input">
+                <label>Minutes</label>
+                <input type="number" id="minutesInput" min="0" max="99" value="5">
+            </div>
+            <span class="separator">:</span>
+            <div class="time-input">
+                <label>Seconds</label>
+                <input type="number" id="secondsInput" min="0" max="59" value="0">
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-reset" id="resetBtn" disabled>Reset</button>
+            <button class="btn btn-start" id="startBtn">Start</button>
+            <button class="btn btn-pause hidden" id="pauseBtn">Pause</button>
+        </div>
+    </div>
+
+    <script>
+        let timer = null;
+        let totalSeconds = 0;
+        let remainingSeconds = 0;
+        let wakeLock = null;
+
+        const timeDisplay = document.getElementById('timeDisplay');
+        const minutesInput = document.getElementById('minutesInput');
+        const secondsInput = document.getElementById('secondsInput');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const timePicker = document.getElementById('timePicker');
+        const progressBar = document.querySelector('.progress-bar');
+        const circumference = 817;
+
+        // Format time display
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        // Update progress circle
+        function updateProgress() {
+            const progress = totalSeconds > 0 ? remainingSeconds / totalSeconds : 0;
+            const offset = circumference * (1 - progress);
+            progressBar.style.strokeDashoffset = offset;
+        }
+
+        // Update display
+        function updateDisplay() {
+            timeDisplay.textContent = formatTime(remainingSeconds);
+            updateProgress();
+        }
+
+        // Request wake lock to keep screen on
+        async function requestWakeLock() {
+            if ('wakeLock' in navigator) {
+                try {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    wakeLock.addEventListener('release', () => {
+                        console.log('Wake Lock released');
+                    });
+                } catch (err) {
+                    console.error('Wake Lock error:', err);
+                }
+            }
+        }
+
+        // Release wake lock
+        async function releaseWakeLock() {
+            if (wakeLock) {
+                try {
+                    await wakeLock.release();
+                    wakeLock = null;
+                } catch (err) {
+                    console.error('Wake Lock release error:', err);
+                }
+            }
+        }
+
+        // Start timer
+        function startTimer() {
+            const minutes = parseInt(minutesInput.value) || 0;
+            const seconds = parseInt(secondsInput.value) || 0;
+            
+            if (remainingSeconds === 0) {
+                totalSeconds = minutes * 60 + seconds;
+                remainingSeconds = totalSeconds;
+            }
+
+            if (remainingSeconds <= 0) return;
+
+            requestWakeLock();
+            
+            startBtn.classList.add('hidden');
+            pauseBtn.classList.remove('hidden');
+            resetBtn.disabled = false;
+            timePicker.style.opacity = '0.5';
+            minutesInput.disabled = true;
+            secondsInput.disabled = true;
+
+            timer = setInterval(() => {
+                remainingSeconds--;
+                updateDisplay();
+
+                if (remainingSeconds <= 0) {
+                    stopTimer();
+                    playSound();
+                }
+            }, 1000);
+        }
+
+        // Pause timer
+        function pauseTimer() {
+            clearInterval(timer);
+            timer = null;
+            releaseWakeLock();
+            
+            startBtn.classList.remove('hidden');
+            pauseBtn.classList.add('hidden');
+        }
+
+        // Stop timer
+        function stopTimer() {
+            clearInterval(timer);
+            timer = null;
+            releaseWakeLock();
+            
+            startBtn.classList.remove('hidden');
+            pauseBtn.classList.add('hidden');
+        }
+
+        // Reset timer
+        function resetTimer() {
+            stopTimer();
+            remainingSeconds = 0;
+            totalSeconds = 0;
+            updateDisplay();
+            resetBtn.disabled = true;
+            timePicker.style.opacity = '1';
+            minutesInput.disabled = false;
+            secondsInput.disabled = false;
+        }
+
+        // Play completion sound (vibrate on mobile)
+        function playSound() {
+            if ('vibrate' in navigator) {
+                navigator.vibrate([200, 100, 200, 100, 200]);
+            }
+        }
+
+        // Event listeners
+        startBtn.addEventListener('click', startTimer);
+        pauseBtn.addEventListener('click', pauseTimer);
+        resetBtn.addEventListener('click', resetTimer);
+
+        // Input validation
+        minutesInput.addEventListener('input', function() {
+            if (this.value > 99) this.value = 99;
+            if (this.value < 0) this.value = 0;
+        });
+
+        secondsInput.addEventListener('input', function() {
+            if (this.value > 59) this.value = 59;
+            if (this.value < 0) this.value = 0;
+        });
+
+        // Initialize display
+        updateDisplay();
+
+        // Handle page visibility changes to re-request wake lock if needed
+        document.addEventListener('visibilitychange', async () => {
+            if (wakeLock !== null && document.visibilityState === 'visible') {
+                await requestWakeLock();
+            }
+        });
+    </script>
+</body>
+</html>
