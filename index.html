@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Timer">
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <title>Timer</title>
     <style>
         * {
@@ -400,7 +400,7 @@
 
         // Handle page visibility changes to re-request wake lock if needed
         document.addEventListener('visibilitychange', async () => {
-            if (wakeLock !== null && document.visibilityState === 'visible') {
+            if (wakeLock && document.visibilityState === 'visible') {
                 await requestWakeLock();
             }
         });
