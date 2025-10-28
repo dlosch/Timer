@@ -21,14 +21,34 @@
             background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
             color: #ffffff;
             height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
             overflow: hidden;
             user-select: none;
             -webkit-user-select: none;
             -webkit-tap-highlight-color: transparent;
+        }
+
+        .views-wrapper {
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .views-container {
+            display: flex;
+            height: 100%;
+            transition: transform 0.3s ease-out;
+            width: 300%;
+        }
+
+        .view {
+            width: 100vw;
+            height: 100vh;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
         .container {
@@ -39,6 +59,28 @@
             flex-direction: column;
             align-items: center;
             gap: 40px;
+        }
+
+        .page-indicators {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .page-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transition: background 0.3s;
+        }
+
+        .page-indicator.active {
+            background: rgba(255, 149, 0, 0.8);
         }
 
         .timer-display {
@@ -248,6 +290,91 @@
             color: rgba(255, 255, 255, 0.6);
         }
 
+        .preset-selector {
+            width: 100%;
+            max-width: 300px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .preset-selector select {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #ffffff;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .preset-selector select option {
+            background: #2d2d2d;
+            color: #ffffff;
+        }
+
+        .overtime-indicator {
+            color: #ff3b30;
+            font-weight: 500;
+        }
+
+        .interval-controls {
+            width: 100%;
+            max-width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .interval-option {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .interval-option:active {
+            transform: scale(0.98);
+        }
+
+        .interval-option.selected {
+            border-color: rgba(255, 149, 0, 0.8);
+            background: rgba(255, 149, 0, 0.15);
+        }
+
+        .interval-option h3 {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .interval-option p {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .interval-status {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            text-align: center;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .view-title {
+            font-size: 24px;
+            font-weight: 300;
+            margin-bottom: 20px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
         @media (max-width: 400px) {
             .timer-display {
                 width: 240px;
@@ -271,65 +398,165 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="timer-display">
-            <svg class="circular-progress" viewBox="0 0 280 280">
-                <circle class="progress-bg" cx="140" cy="140" r="130"></circle>
-                <circle class="progress-bar" cx="140" cy="140" r="130" 
-                        stroke-dasharray="817" 
-                        stroke-dashoffset="817"></circle>
-            </svg>
-            <div class="time-text" id="timeDisplay">00:00</div>
-        </div>
+    <div class="views-wrapper">
+        <div class="views-container" id="viewsContainer">
+            <!-- View 1: Custom Timer (existing) -->
+            <div class="view" id="view1">
+                <div class="container">
+                    <div class="timer-display">
+                        <svg class="circular-progress" viewBox="0 0 280 280">
+                            <circle class="progress-bg" cx="140" cy="140" r="130"></circle>
+                            <circle class="progress-bar" cx="140" cy="140" r="130" id="progressBar1"
+                                    stroke-dasharray="817" 
+                                    stroke-dashoffset="817"></circle>
+                        </svg>
+                        <div class="time-text" id="timeDisplay1">00:00</div>
+                    </div>
 
-        <div class="time-picker" id="timePicker">
-            <div class="time-input">
-                <label>Minutes</label>
-                <div class="picker-container">
-                    <div class="picker-highlight"></div>
-                    <div class="picker-scroll" id="minutesPicker"></div>
+                    <div class="time-picker" id="timePicker1">
+                        <div class="time-input">
+                            <label>Minutes</label>
+                            <div class="picker-container">
+                                <div class="picker-highlight"></div>
+                                <div class="picker-scroll" id="minutesPicker1"></div>
+                            </div>
+                        </div>
+                        <span class="separator">:</span>
+                        <div class="time-input">
+                            <label>Seconds</label>
+                            <div class="picker-container">
+                                <div class="picker-highlight"></div>
+                                <div class="picker-scroll" id="secondsPicker1"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="controls">
+                        <button class="btn btn-reset" id="resetBtn1" disabled>Reset</button>
+                        <button class="btn btn-start" id="startBtn1">Start</button>
+                        <button class="btn btn-pause hidden" id="pauseBtn1">Pause</button>
+                    </div>
                 </div>
             </div>
-            <span class="separator">:</span>
-            <div class="time-input">
-                <label>Seconds</label>
-                <div class="picker-container">
-                    <div class="picker-highlight"></div>
-                    <div class="picker-scroll" id="secondsPicker"></div>
+
+            <!-- View 2: Predefined Timers -->
+            <div class="view" id="view2">
+                <div class="container">
+                    <h2 class="view-title">Predefined Timers</h2>
+                    <div class="timer-display">
+                        <svg class="circular-progress" viewBox="0 0 280 280">
+                            <circle class="progress-bg" cx="140" cy="140" r="130"></circle>
+                            <circle class="progress-bar" cx="140" cy="140" r="130" id="progressBar2"
+                                    stroke-dasharray="817" 
+                                    stroke-dashoffset="817"></circle>
+                        </svg>
+                        <div class="time-text" id="timeDisplay2">00:00</div>
+                    </div>
+
+                    <div class="preset-selector">
+                        <select id="presetSelect">
+                            <option value="420">OPD - 7min</option>
+                            <option value="180">OPD - 3min</option>
+                            <option value="60">OPD - 1min</option>
+                        </select>
+                    </div>
+
+                    <div class="controls">
+                        <button class="btn btn-reset" id="resetBtn2" disabled>Reset</button>
+                        <button class="btn btn-start" id="startBtn2">Start</button>
+                        <button class="btn btn-pause hidden" id="pauseBtn2">Pause</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View 3: Interval Timer -->
+            <div class="view" id="view3">
+                <div class="container">
+                    <h2 class="view-title">Interval Timer</h2>
+                    <div class="timer-display">
+                        <svg class="circular-progress" viewBox="0 0 280 280">
+                            <circle class="progress-bg" cx="140" cy="140" r="130"></circle>
+                            <circle class="progress-bar" cx="140" cy="140" r="130" id="progressBar3"
+                                    stroke-dasharray="817" 
+                                    stroke-dashoffset="817"></circle>
+                        </svg>
+                        <div class="time-text" id="timeDisplay3">00:00</div>
+                    </div>
+
+                    <div class="interval-controls">
+                        <div class="interval-option selected" data-on="7" data-off="3">
+                            <h3>7 / 3 Intervals</h3>
+                            <p>7 seconds on, 3 seconds off</p>
+                        </div>
+                        <div class="interval-option" data-on="30" data-off="10">
+                            <h3>30 / 10 Intervals</h3>
+                            <p>30 seconds on, 10 seconds off</p>
+                        </div>
+                        <div class="interval-option" data-on="30" data-off="0">
+                            <h3>30 Second Continuous</h3>
+                            <p>30 seconds on, repeat</p>
+                        </div>
+                        <div class="interval-status" id="intervalStatus3">Select an interval to start</div>
+                    </div>
+
+                    <div class="controls">
+                        <button class="btn btn-reset" id="resetBtn3" disabled>Reset</button>
+                        <button class="btn btn-start" id="startBtn3">Start</button>
+                        <button class="btn btn-pause hidden" id="pauseBtn3">Pause</button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="controls">
-            <button class="btn btn-reset" id="resetBtn" disabled>Reset</button>
-            <button class="btn btn-start" id="startBtn">Start</button>
-            <button class="btn btn-pause hidden" id="pauseBtn">Pause</button>
+        <div class="page-indicators">
+            <div class="page-indicator active"></div>
+            <div class="page-indicator"></div>
+            <div class="page-indicator"></div>
         </div>
     </div>
 
     <script src="nosleep.min.js"></script>
     <script>
-        let timer = null;
-        let totalSeconds = 0;
-        let remainingSeconds = 0;
-        let wakeLock = null;
+        // Global state
         let noSleep = new NoSleep();
-        let selectedMinutes = 5;
-        let selectedSeconds = 0;
-
-        const timeDisplay = document.getElementById('timeDisplay');
-        const minutesPicker = document.getElementById('minutesPicker');
-        const secondsPicker = document.getElementById('secondsPicker');
-        const startBtn = document.getElementById('startBtn');
-        const pauseBtn = document.getElementById('pauseBtn');
-        const resetBtn = document.getElementById('resetBtn');
-        const timePicker = document.getElementById('timePicker');
-        const progressBar = document.querySelector('.progress-bar');
-        const circumference = 817;
-
-        // Create audio context for beep sounds
         let audioContext = null;
+        const circumference = 817;
+        let currentView = 0;
 
+        // View-specific timers and state
+        const viewState = {
+            1: {
+                timer: null,
+                totalSeconds: 0,
+                remainingSeconds: 0,
+                selectedMinutes: 5,
+                selectedSeconds: 0,
+                wakeLock: null,
+                lastBeepAt1Min: false
+            },
+            2: {
+                timer: null,
+                totalSeconds: 0,
+                remainingSeconds: 0,
+                presetSeconds: 420,
+                isOvertime: false,
+                overtimeSeconds: 0,
+                wakeLock: null,
+                lastBeepAt1Min: false
+            },
+            3: {
+                timer: null,
+                currentPhase: 'on', // 'on' or 'off'
+                remainingSeconds: 0,
+                onDuration: 7,
+                offDuration: 3,
+                totalSeconds: 0,
+                wakeLock: null,
+                lastBeepAt1Min: false
+            }
+        };
+
+        // Audio Context
         function getAudioContext() {
             if (!audioContext) {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -337,7 +564,6 @@
             return audioContext;
         }
 
-        // Helper to create and play a beep sound
         function createBeep(frequency, duration) {
             const ctx = getAudioContext();
             const oscillator = ctx.createOscillator();
@@ -356,236 +582,570 @@
             oscillator.stop(ctx.currentTime + duration);
         }
 
-        // Play beep sound
         function playBeep(duration = 0.1, frequency = 600) {
             createBeep(frequency, duration);
         }
 
-        // Play long completion beep
         function playCompletionBeep() {
             createBeep(880, 1);
-
-            // Also vibrate if available
             if ('vibrate' in navigator) {
                 navigator.vibrate([200, 100, 200, 100, 200]);
             }
         }
 
-        // Helper function to setup picker scroll handler
-        function setupPickerScrollHandler(picker, valueSetter) {
-            let scrollTimeout;
-            picker.addEventListener('scroll', () => {
-                clearTimeout(scrollTimeout);
-                scrollTimeout = setTimeout(() => {
-                    const value = getPickerValue(picker);
-                    valueSetter(value);
-                    updatePickerHighlight(picker);
-                }, 100);
+        // Enhanced beep logic based on total time
+        function shouldBeepAt1Min(totalSeconds, remainingSeconds, lastBeepAt1Min) {
+            return totalSeconds >= 300 && remainingSeconds === 60 && !lastBeepAt1Min;
+        }
+
+        function shouldBeepCountdown(totalSeconds, remainingSeconds) {
+            if (totalSeconds >= 60) {
+                // For timers >= 1 min: beep at 5, 4, 3, 2, 1
+                return remainingSeconds > 0 && remainingSeconds <= 5;
+            } else {
+                // For timers < 1 min: beep at 3, 2, 1
+                return remainingSeconds > 0 && remainingSeconds <= 3;
+            }
+        }
+
+        // Swipe handling
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchEndX = 0;
+        let touchEndY = 0;
+
+        const viewsContainer = document.getElementById('viewsContainer');
+        const pageIndicators = document.querySelectorAll('.page-indicator');
+
+        function updateView() {
+            const offset = -currentView * 100;
+            viewsContainer.style.transform = `translateX(${offset}vw)`;
+            pageIndicators.forEach((indicator, index) => {
+                indicator.classList.toggle('active', index === currentView);
             });
         }
 
-        // Initialize scroll pickers
-        function initializePickers() {
-            // Minutes picker (0-99)
-            for (let i = 0; i <= 99; i++) {
-                const item = document.createElement('div');
-                item.className = 'picker-item';
-                item.textContent = String(i).padStart(2, '0');
-                item.dataset.value = i;
-                minutesPicker.appendChild(item);
-            }
+        viewsContainer.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+        }, { passive: true });
 
-            // Seconds picker (0-59)
-            for (let i = 0; i <= 59; i++) {
-                const item = document.createElement('div');
-                item.className = 'picker-item';
-                item.textContent = String(i).padStart(2, '0');
-                item.dataset.value = i;
-                secondsPicker.appendChild(item);
-            }
+        viewsContainer.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            touchEndY = e.changedTouches[0].screenY;
+            handleSwipe();
+        }, { passive: true });
 
-            // Set initial scroll positions
-            updatePickerScroll(minutesPicker, selectedMinutes);
-            updatePickerScroll(secondsPicker, selectedSeconds);
-
-            // Add scroll event listeners
-            setupPickerScrollHandler(minutesPicker, (value) => { selectedMinutes = value; });
-            setupPickerScrollHandler(secondsPicker, (value) => { selectedSeconds = value; });
-
-            // Initial highlight
-            updatePickerHighlight(minutesPicker);
-            updatePickerHighlight(secondsPicker);
-        }
-
-        function updatePickerScroll(picker, value) {
-            const itemHeight = 40;
-            picker.scrollTop = value * itemHeight;
-        }
-
-        function getPickerValue(picker) {
-            const itemHeight = 40;
-            const scrollTop = picker.scrollTop;
-            return Math.round(scrollTop / itemHeight);
-        }
-
-        function updatePickerHighlight(picker) {
-            const items = picker.querySelectorAll('.picker-item');
-            const centerIndex = getPickerValue(picker);
+        function handleSwipe() {
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = touchEndY - touchStartY;
             
-            items.forEach((item, index) => {
-                if (index === centerIndex) {
-                    item.classList.add('active');
-                } else {
-                    item.classList.remove('active');
+            // Only handle horizontal swipes
+            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+                if (deltaX < 0 && currentView < 2) {
+                    // Swipe left - next view
+                    currentView++;
+                    updateView();
+                } else if (deltaX > 0 && currentView > 0) {
+                    // Swipe right - previous view
+                    currentView--;
+                    updateView();
                 }
-            });
+            }
         }
 
-        function disablePickers() {
-            minutesPicker.style.pointerEvents = 'none';
-            secondsPicker.style.pointerEvents = 'none';
-        }
-
-        function enablePickers() {
-            minutesPicker.style.pointerEvents = 'auto';
-            secondsPicker.style.pointerEvents = 'auto';
-        }
-
-        // Format time display
-        function formatTime(seconds) {
-            const mins = Math.floor(seconds / 60);
-            const secs = seconds % 60;
-            return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-        }
-
-        // Update progress circle
-        function updateProgress() {
-            const progress = totalSeconds > 0 ? remainingSeconds / totalSeconds : 0;
-            const offset = circumference * (1 - progress);
-            progressBar.style.strokeDashoffset = offset;
-        }
-
-        // Update display
-        function updateDisplay() {
-            timeDisplay.textContent = formatTime(remainingSeconds);
-            updateProgress();
-        }
-
-        // Request wake lock to keep screen on
-        async function requestWakeLock() {
-            // Try standard Wake Lock API
+        // Wake Lock
+        async function requestWakeLock(view) {
             if ('wakeLock' in navigator) {
                 try {
-                    wakeLock = await navigator.wakeLock.request('screen');
-                    wakeLock.addEventListener('release', () => {
-                        console.log('Wake Lock released');
+                    viewState[view].wakeLock = await navigator.wakeLock.request('screen');
+                    viewState[view].wakeLock.addEventListener('release', () => {
+                        console.log('Wake Lock released for view', view);
                     });
-                    console.log('Wake Lock acquired');
                 } catch (err) {
                     console.log('Wake Lock error:', err);
                 }
             }
         }
 
-        // Release wake lock
-        async function releaseWakeLock() {
-            if (wakeLock) {
+        async function releaseWakeLock(view) {
+            if (viewState[view].wakeLock) {
                 try {
-                    await wakeLock.release();
-                    wakeLock = null;
+                    await viewState[view].wakeLock.release();
+                    viewState[view].wakeLock = null;
                 } catch (err) {
                     console.error('Wake Lock release error:', err);
                 }
             }
         }
 
-        // Start timer
-        function startTimer() {
-            if (remainingSeconds === 0) {
-                totalSeconds = selectedMinutes * 60 + selectedSeconds;
-                remainingSeconds = totalSeconds;
-            }
+        // Utility functions
+        function formatTime(seconds, showSign = false) {
+            const sign = showSign && seconds < 0 ? '-' : (showSign && seconds > 0 ? '+' : '');
+            const absSeconds = Math.abs(seconds);
+            const mins = Math.floor(absSeconds / 60);
+            const secs = absSeconds % 60;
+            return `${sign}${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
 
-            if (remainingSeconds <= 0) return;
+        function updateProgress(progressBarId, remaining, total) {
+            const progressBar = document.getElementById(progressBarId);
+            const progress = total > 0 ? remaining / total : 0;
+            const offset = circumference * (1 - progress);
+            progressBar.style.strokeDashoffset = offset;
+        }
 
-            // Enable audio context on user interaction
-            if (audioContext && audioContext.state === 'suspended') {
-                audioContext.resume();
-            }
+        // ==================== VIEW 1: CUSTOM TIMER ====================
+        const view1 = {
+            timeDisplay: document.getElementById('timeDisplay1'),
+            minutesPicker: document.getElementById('minutesPicker1'),
+            secondsPicker: document.getElementById('secondsPicker1'),
+            startBtn: document.getElementById('startBtn1'),
+            pauseBtn: document.getElementById('pauseBtn1'),
+            resetBtn: document.getElementById('resetBtn1'),
+            timePicker: document.getElementById('timePicker1'),
 
-            // Enable NoSleep on user interaction
-            noSleep.enable();
-
-            requestWakeLock();
-            
-            startBtn.classList.add('hidden');
-            pauseBtn.classList.remove('hidden');
-            resetBtn.disabled = false;
-            timePicker.style.opacity = '0.5';
-            disablePickers();
-
-            timer = setInterval(() => {
-                remainingSeconds--;
-                updateDisplay();
-
-                // Play countdown beeps at 5, 4, 3, 2, 1 seconds
-                if (remainingSeconds > 0 && remainingSeconds <= 5) {
-                    playBeep();
+            initializePickers() {
+                // Minutes picker (0-99)
+                for (let i = 0; i <= 99; i++) {
+                    const item = document.createElement('div');
+                    item.className = 'picker-item';
+                    item.textContent = String(i).padStart(2, '0');
+                    item.dataset.value = i;
+                    this.minutesPicker.appendChild(item);
                 }
 
-                if (remainingSeconds <= 0) {
-                    stopTimer();
-                    playCompletionBeep();
+                // Seconds picker (0-59)
+                for (let i = 0; i <= 59; i++) {
+                    const item = document.createElement('div');
+                    item.className = 'picker-item';
+                    item.textContent = String(i).padStart(2, '0');
+                    item.dataset.value = i;
+                    this.secondsPicker.appendChild(item);
                 }
-            }, 1000);
-        }
 
-        // Pause timer
-        function pauseTimer() {
-            clearInterval(timer);
-            timer = null;
-            releaseWakeLock();
-            noSleep.disable();
-            
-            startBtn.classList.remove('hidden');
-            pauseBtn.classList.add('hidden');
-        }
+                // Set initial scroll positions
+                this.updatePickerScroll(this.minutesPicker, viewState[1].selectedMinutes);
+                this.updatePickerScroll(this.secondsPicker, viewState[1].selectedSeconds);
 
-        // Stop timer
-        function stopTimer() {
-            clearInterval(timer);
-            timer = null;
-            releaseWakeLock();
-            noSleep.disable();
-            
-            startBtn.classList.remove('hidden');
-            pauseBtn.classList.add('hidden');
-        }
+                // Add scroll event listeners
+                this.setupPickerScrollHandler(this.minutesPicker, (value) => { 
+                    viewState[1].selectedMinutes = value; 
+                });
+                this.setupPickerScrollHandler(this.secondsPicker, (value) => { 
+                    viewState[1].selectedSeconds = value; 
+                });
 
-        // Reset timer
-        function resetTimer() {
-            stopTimer();
-            remainingSeconds = 0;
-            totalSeconds = 0;
-            updateDisplay();
-            resetBtn.disabled = true;
-            timePicker.style.opacity = '1';
-            enablePickers();
-        }
+                // Initial highlight
+                this.updatePickerHighlight(this.minutesPicker);
+                this.updatePickerHighlight(this.secondsPicker);
+            },
 
-        // Event listeners
-        startBtn.addEventListener('click', startTimer);
-        pauseBtn.addEventListener('click', pauseTimer);
-        resetBtn.addEventListener('click', resetTimer);
+            setupPickerScrollHandler(picker, valueSetter) {
+                let scrollTimeout;
+                picker.addEventListener('scroll', () => {
+                    clearTimeout(scrollTimeout);
+                    scrollTimeout = setTimeout(() => {
+                        const value = this.getPickerValue(picker);
+                        valueSetter(value);
+                        this.updatePickerHighlight(picker);
+                    }, 100);
+                });
+            },
 
-        // Initialize
-        initializePickers();
-        updateDisplay();
+            updatePickerScroll(picker, value) {
+                const itemHeight = 40;
+                picker.scrollTop = value * itemHeight;
+            },
+
+            getPickerValue(picker) {
+                const itemHeight = 40;
+                const scrollTop = picker.scrollTop;
+                return Math.round(scrollTop / itemHeight);
+            },
+
+            updatePickerHighlight(picker) {
+                const items = picker.querySelectorAll('.picker-item');
+                const centerIndex = this.getPickerValue(picker);
+                
+                items.forEach((item, index) => {
+                    if (index === centerIndex) {
+                        item.classList.add('active');
+                    } else {
+                        item.classList.remove('active');
+                    }
+                });
+            },
+
+            disablePickers() {
+                this.minutesPicker.style.pointerEvents = 'none';
+                this.secondsPicker.style.pointerEvents = 'none';
+            },
+
+            enablePickers() {
+                this.minutesPicker.style.pointerEvents = 'auto';
+                this.secondsPicker.style.pointerEvents = 'auto';
+            },
+
+            updateDisplay() {
+                this.timeDisplay.textContent = formatTime(viewState[1].remainingSeconds);
+                updateProgress('progressBar1', viewState[1].remainingSeconds, viewState[1].totalSeconds);
+            },
+
+            start() {
+                if (viewState[1].remainingSeconds === 0) {
+                    viewState[1].totalSeconds = viewState[1].selectedMinutes * 60 + viewState[1].selectedSeconds;
+                    viewState[1].remainingSeconds = viewState[1].totalSeconds;
+                    viewState[1].lastBeepAt1Min = false;
+                }
+
+                if (viewState[1].remainingSeconds <= 0) return;
+
+                // Enable audio context on user interaction
+                if (audioContext && audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+
+                noSleep.enable();
+                requestWakeLock(1);
+                
+                this.startBtn.classList.add('hidden');
+                this.pauseBtn.classList.remove('hidden');
+                this.resetBtn.disabled = false;
+                this.timePicker.style.opacity = '0.5';
+                this.disablePickers();
+
+                viewState[1].timer = setInterval(() => {
+                    viewState[1].remainingSeconds--;
+                    this.updateDisplay();
+
+                    // Beep at 1 minute for timers >= 5 minutes
+                    if (shouldBeepAt1Min(viewState[1].totalSeconds, viewState[1].remainingSeconds, viewState[1].lastBeepAt1Min)) {
+                        playBeep();
+                        viewState[1].lastBeepAt1Min = true;
+                    }
+
+                    // Countdown beeps
+                    if (shouldBeepCountdown(viewState[1].totalSeconds, viewState[1].remainingSeconds)) {
+                        playBeep();
+                    }
+
+                    if (viewState[1].remainingSeconds <= 0) {
+                        this.stop();
+                        playCompletionBeep();
+                    }
+                }, 1000);
+            },
+
+            pause() {
+                clearInterval(viewState[1].timer);
+                viewState[1].timer = null;
+                releaseWakeLock(1);
+                noSleep.disable();
+                
+                this.startBtn.classList.remove('hidden');
+                this.pauseBtn.classList.add('hidden');
+            },
+
+            stop() {
+                clearInterval(viewState[1].timer);
+                viewState[1].timer = null;
+                releaseWakeLock(1);
+                noSleep.disable();
+                
+                this.startBtn.classList.remove('hidden');
+                this.pauseBtn.classList.add('hidden');
+            },
+
+            reset() {
+                this.stop();
+                viewState[1].remainingSeconds = 0;
+                viewState[1].totalSeconds = 0;
+                viewState[1].lastBeepAt1Min = false;
+                this.updateDisplay();
+                this.resetBtn.disabled = true;
+                this.timePicker.style.opacity = '1';
+                this.enablePickers();
+            }
+        };
+
+        // ==================== VIEW 2: PREDEFINED TIMER ====================
+        const view2 = {
+            timeDisplay: document.getElementById('timeDisplay2'),
+            presetSelect: document.getElementById('presetSelect'),
+            startBtn: document.getElementById('startBtn2'),
+            pauseBtn: document.getElementById('pauseBtn2'),
+            resetBtn: document.getElementById('resetBtn2'),
+
+            updateDisplay() {
+                let displayText;
+                if (viewState[2].isOvertime) {
+                    displayText = '+' + formatTime(viewState[2].overtimeSeconds);
+                    this.timeDisplay.classList.add('overtime-indicator');
+                } else {
+                    displayText = formatTime(viewState[2].remainingSeconds);
+                    this.timeDisplay.classList.remove('overtime-indicator');
+                }
+                this.timeDisplay.textContent = displayText;
+
+                if (!viewState[2].isOvertime) {
+                    updateProgress('progressBar2', viewState[2].remainingSeconds, viewState[2].totalSeconds);
+                } else {
+                    // In overtime, show empty progress bar
+                    updateProgress('progressBar2', 0, 1);
+                }
+            },
+
+            start() {
+                if (viewState[2].remainingSeconds === 0 && !viewState[2].isOvertime) {
+                    viewState[2].presetSeconds = parseInt(this.presetSelect.value);
+                    viewState[2].totalSeconds = viewState[2].presetSeconds;
+                    viewState[2].remainingSeconds = viewState[2].totalSeconds;
+                    viewState[2].isOvertime = false;
+                    viewState[2].overtimeSeconds = 0;
+                    viewState[2].lastBeepAt1Min = false;
+                }
+
+                if (audioContext && audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+
+                noSleep.enable();
+                requestWakeLock(2);
+                
+                this.startBtn.classList.add('hidden');
+                this.pauseBtn.classList.remove('hidden');
+                this.resetBtn.disabled = false;
+                this.presetSelect.disabled = true;
+
+                viewState[2].timer = setInterval(() => {
+                    if (!viewState[2].isOvertime) {
+                        viewState[2].remainingSeconds--;
+                        
+                        // Beep at 1 minute for timers >= 5 minutes
+                        if (shouldBeepAt1Min(viewState[2].totalSeconds, viewState[2].remainingSeconds, viewState[2].lastBeepAt1Min)) {
+                            playBeep();
+                            viewState[2].lastBeepAt1Min = true;
+                        }
+
+                        // Countdown beeps
+                        if (shouldBeepCountdown(viewState[2].totalSeconds, viewState[2].remainingSeconds)) {
+                            playBeep();
+                        }
+
+                        if (viewState[2].remainingSeconds <= 0) {
+                            playCompletionBeep();
+                            viewState[2].isOvertime = true;
+                            viewState[2].overtimeSeconds = 0;
+                        }
+                    } else {
+                        // In overtime, count up
+                        viewState[2].overtimeSeconds++;
+                    }
+                    
+                    this.updateDisplay();
+                }, 1000);
+            },
+
+            pause() {
+                clearInterval(viewState[2].timer);
+                viewState[2].timer = null;
+                releaseWakeLock(2);
+                noSleep.disable();
+                
+                this.startBtn.classList.remove('hidden');
+                this.pauseBtn.classList.add('hidden');
+            },
+
+            stop() {
+                clearInterval(viewState[2].timer);
+                viewState[2].timer = null;
+                releaseWakeLock(2);
+                noSleep.disable();
+                
+                this.startBtn.classList.remove('hidden');
+                this.pauseBtn.classList.add('hidden');
+            },
+
+            reset() {
+                this.stop();
+                viewState[2].remainingSeconds = 0;
+                viewState[2].totalSeconds = 0;
+                viewState[2].isOvertime = false;
+                viewState[2].overtimeSeconds = 0;
+                viewState[2].lastBeepAt1Min = false;
+                this.updateDisplay();
+                this.resetBtn.disabled = true;
+                this.presetSelect.disabled = false;
+            }
+        };
+
+        // ==================== VIEW 3: INTERVAL TIMER ====================
+        const view3 = {
+            timeDisplay: document.getElementById('timeDisplay3'),
+            startBtn: document.getElementById('startBtn3'),
+            pauseBtn: document.getElementById('pauseBtn3'),
+            resetBtn: document.getElementById('resetBtn3'),
+            intervalStatus: document.getElementById('intervalStatus3'),
+            intervalOptions: document.querySelectorAll('.interval-option'),
+
+            init() {
+                // Set default interval
+                viewState[3].onDuration = 7;
+                viewState[3].offDuration = 3;
+                
+                // Add click handlers to interval options
+                this.intervalOptions.forEach(option => {
+                    option.addEventListener('click', () => {
+                        // Don't allow changing during active timer
+                        if (viewState[3].timer) return;
+                        
+                        this.intervalOptions.forEach(opt => opt.classList.remove('selected'));
+                        option.classList.add('selected');
+                        
+                        viewState[3].onDuration = parseInt(option.dataset.on);
+                        viewState[3].offDuration = parseInt(option.dataset.off);
+                    });
+                });
+            },
+
+            updateDisplay() {
+                this.timeDisplay.textContent = formatTime(viewState[3].remainingSeconds);
+                
+                // Update progress based on current phase
+                if (viewState[3].currentPhase === 'on') {
+                    updateProgress('progressBar3', viewState[3].remainingSeconds, viewState[3].onDuration);
+                    this.intervalStatus.textContent = 'ON - ' + formatTime(viewState[3].remainingSeconds);
+                    this.intervalStatus.style.background = 'rgba(255, 149, 0, 0.3)';
+                } else {
+                    updateProgress('progressBar3', viewState[3].remainingSeconds, viewState[3].offDuration);
+                    this.intervalStatus.textContent = 'OFF - ' + formatTime(viewState[3].remainingSeconds);
+                    this.intervalStatus.style.background = 'rgba(0, 0, 0, 0.3)';
+                }
+            },
+
+            start() {
+                if (viewState[3].timer === null) {
+                    // Starting fresh
+                    viewState[3].currentPhase = 'on';
+                    viewState[3].remainingSeconds = viewState[3].onDuration;
+                    viewState[3].totalSeconds = viewState[3].onDuration;
+                    viewState[3].lastBeepAt1Min = false;
+                }
+
+                if (audioContext && audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+
+                noSleep.enable();
+                requestWakeLock(3);
+                
+                this.startBtn.classList.add('hidden');
+                this.pauseBtn.classList.remove('hidden');
+                this.resetBtn.disabled = false;
+
+                viewState[3].timer = setInterval(() => {
+                    viewState[3].remainingSeconds--;
+                    
+                    // Beep at 1 minute for current phase >= 5 minutes
+                    if (shouldBeepAt1Min(viewState[3].totalSeconds, viewState[3].remainingSeconds, viewState[3].lastBeepAt1Min)) {
+                        playBeep();
+                        viewState[3].lastBeepAt1Min = true;
+                    }
+
+                    // Countdown beeps
+                    if (shouldBeepCountdown(viewState[3].totalSeconds, viewState[3].remainingSeconds)) {
+                        playBeep();
+                    }
+
+                    if (viewState[3].remainingSeconds <= 0) {
+                        playCompletionBeep();
+                        
+                        // Switch phase
+                        if (viewState[3].currentPhase === 'on') {
+                            if (viewState[3].offDuration > 0) {
+                                viewState[3].currentPhase = 'off';
+                                viewState[3].remainingSeconds = viewState[3].offDuration;
+                                viewState[3].totalSeconds = viewState[3].offDuration;
+                            } else {
+                                // No off duration, restart on phase
+                                viewState[3].remainingSeconds = viewState[3].onDuration;
+                                viewState[3].totalSeconds = viewState[3].onDuration;
+                            }
+                        } else {
+                            viewState[3].currentPhase = 'on';
+                            viewState[3].remainingSeconds = viewState[3].onDuration;
+                            viewState[3].totalSeconds = viewState[3].onDuration;
+                        }
+                        viewState[3].lastBeepAt1Min = false;
+                    }
+                    
+                    this.updateDisplay();
+                }, 1000);
+            },
+
+            pause() {
+                clearInterval(viewState[3].timer);
+                viewState[3].timer = null;
+                releaseWakeLock(3);
+                noSleep.disable();
+                
+                this.startBtn.classList.remove('hidden');
+                this.pauseBtn.classList.add('hidden');
+            },
+
+            stop() {
+                clearInterval(viewState[3].timer);
+                viewState[3].timer = null;
+                releaseWakeLock(3);
+                noSleep.disable();
+                
+                this.startBtn.classList.remove('hidden');
+                this.pauseBtn.classList.add('hidden');
+            },
+
+            reset() {
+                this.stop();
+                viewState[3].currentPhase = 'on';
+                viewState[3].remainingSeconds = 0;
+                viewState[3].totalSeconds = 0;
+                viewState[3].lastBeepAt1Min = false;
+                this.intervalStatus.textContent = 'Select an interval to start';
+                this.intervalStatus.style.background = 'rgba(0, 0, 0, 0.3)';
+                this.timeDisplay.textContent = '00:00';
+                updateProgress('progressBar3', 0, 1);
+                this.resetBtn.disabled = true;
+            }
+        };
+
+        // ==================== INITIALIZATION ====================
+        // Initialize views
+        view1.initializePickers();
+        view1.updateDisplay();
+        view2.updateDisplay();
+        view3.init();
+
+        // Event listeners for View 1
+        view1.startBtn.addEventListener('click', () => view1.start());
+        view1.pauseBtn.addEventListener('click', () => view1.pause());
+        view1.resetBtn.addEventListener('click', () => view1.reset());
+
+        // Event listeners for View 2
+        view2.startBtn.addEventListener('click', () => view2.start());
+        view2.pauseBtn.addEventListener('click', () => view2.pause());
+        view2.resetBtn.addEventListener('click', () => view2.reset());
+
+        // Event listeners for View 3
+        view3.startBtn.addEventListener('click', () => view3.start());
+        view3.pauseBtn.addEventListener('click', () => view3.pause());
+        view3.resetBtn.addEventListener('click', () => view3.reset());
 
         // Handle page visibility changes to re-request wake lock if needed
         document.addEventListener('visibilitychange', async () => {
-            if (timer && document.visibilityState === 'visible') {
-                await requestWakeLock();
+            for (let view = 1; view <= 3; view++) {
+                if (viewState[view].timer && document.visibilityState === 'visible') {
+                    await requestWakeLock(view);
+                }
             }
         });
 
