@@ -1,6 +1,6 @@
 # Timer
 
-A sleek, iOS-style countdown timer web application that can be installed as a Progressive Web App (PWA) on iOS devices.
+A iOS-style countdown timer. 100% GitHub Copilot agent. uses https://github.com/richtr/NoSleep.js?tab=readme-ov-file.
 
 ## Features
 
