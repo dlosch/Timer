@@ -1,16 +1,19 @@
-const CACHE_NAME = 'timer-v1';
+const CACHE_NAME = 'timer-v2';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/nosleep.min.js',
-  '/icon-192.png',
-  '/icon-512.png',
-  '/icon.png'
+  './',
+  './index.html',
+  './manifest.json',
+  './nosleep.min.js',
+  './icon-192.png',
+  './icon-512.png',
+  './icon.png'
 ];
 
 // Install Service Worker
 self.addEventListener('install', event => {
+  // Force the waiting service worker to become the active service worker
+  self.skipWaiting();
+  
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
@@ -37,16 +40,20 @@ self.addEventListener('fetch', event => {
 
 // Activate and clean up old caches
 self.addEventListener('activate', event => {
-  const cacheWhitelist = [CACHE_NAME];
+  // Take control immediately
   event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    Promise.all([
+      self.clients.claim(),
+      caches.keys().then(cacheNames => {
+        return Promise.all(
+          cacheNames.map(cacheName => {
+            if (cacheName !== CACHE_NAME) {
+              console.log('Deleting old cache:', cacheName);
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      })
+    ])
   );
 });
