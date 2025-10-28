@@ -1,8 +1,9 @@
 {
   "name": "Timer",
   "short_name": "Timer",
-  "description": "iOS-style timer application",
+  "description": "iOS-style timer application with offline support",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#1a1a1a",
   "theme_color": "#ff9500",
