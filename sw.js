@@ -1,6 +1,5 @@
-const CACHE_NAME = 'timer-v2';
+const CACHE_NAME = 'timer-v3';
 const urlsToCache = [
-  './',
   './index.html',
   './manifest.json',
   './nosleep.min.js',
@@ -20,6 +19,9 @@ self.addEventListener('install', event => {
         console.log('Opened cache');
         return cache.addAll(urlsToCache);
       })
+      .catch(error => {
+        console.error('Cache addAll failed:', error);
+      })
   );
 });
 
@@ -28,13 +30,29 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
       .then(response => {
-        // Cache hit - return response
         if (response) {
           return response;
         }
-        return fetch(event.request);
-      }
-    )
+        
+        // For navigation requests (including root path), try to return index.html
+        if (event.request.mode === 'navigate') {
+          return caches.match('./index.html')
+            .then(indexResponse => {
+              if (indexResponse) {
+                return indexResponse;
+              }
+              return fetch(event.request);
+            });
+        }
+        
+        return fetch(event.request)
+          .catch(() => {
+            // If fetch fails and it's a navigation request, return index.html from cache
+            if (event.request.mode === 'navigate') {
+              return caches.match('./index.html');
+            }
+          });
+      })
   );
 });
 
