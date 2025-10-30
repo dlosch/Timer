@@ -21,6 +21,7 @@
             background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
             color: #ffffff;
             height: 100vh;
+            min-height: 100dvh;
             overflow: hidden;
             user-select: none;
             -webkit-user-select: none;
@@ -30,6 +31,7 @@
         .views-wrapper {
             width: 100%;
             height: 100vh;
+            min-height: 100dvh;
             overflow: hidden;
             position: relative;
         }
@@ -38,17 +40,20 @@
             display: flex;
             height: 100%;
             transition: transform 0.3s ease-out;
-            width: 400%;
+            width: 500%;
         }
 
         .view {
             width: 100vw;
             height: 100vh;
+            min-height: 100dvh;
             flex-shrink: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            padding-top: env(safe-area-inset-top, 0);
+            padding-bottom: env(safe-area-inset-bottom, 0);
         }
 
         .container {
@@ -511,18 +516,243 @@
         }
 
         /* (Reverted) Interval view controls positioning: use default flow */
+
+        /* ========== Angled (45° optimized) experimental pane styles ========== */
+        .angled-pane {
+            /* Clamp dial size so it never clips smaller viewports while still filling larger screens */
+            --dial-size: clamp(220px, min(78vw, 60dvh), 340px);
+        }
+        .angled-pane .container {
+            max-width: 620px;
+            width: 100%;
+            justify-content: center;
+            gap: 40px;
+            gap: clamp(28px, 8vh, 56px);
+            padding: 40px 20px;
+            padding: clamp(24px, 8dvh, 64px) clamp(16px, 6vw, 32px);
+        }
+
+        .angled-pane .timer-display {
+            width: var(--dial-size);
+            height: var(--dial-size);
+            position: relative;
+            z-index: 5;
+            isolation: isolate;
+            /* Keep the dial inside the viewport and compensate for the angled perspective */
+            /* transform: translateY(2%) perspective(900px) rotateX(-25deg) scaleY(1.28); */
+            /* transform: translateY(2%) perspective(900px) rotateX(-35deg) scaleY(1.28); */
+            transform-origin: center;
+        }
+
+        /* 3D transform test view styles (used by view1-3d) */
+        .test-3d-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(120px, 1fr));
+            gap: 18px;
+            width: 100%;
+            max-width: 720px;
+            align-items: center;
+        }
+
+        .test-3d-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+        }
+
+        .test-label {
+            font-size: 13px;
+            color: rgba(255,255,255,0.85);
+            text-align: center;
+        }
+
+        .test-box {
+            width: 120px;
+            height: 84px;
+            background: linear-gradient(180deg,#ff9500,#ff6a00);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #111;
+            font-weight: 700;
+            border-radius: 10px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+            transition: transform 300ms ease, box-shadow 300ms ease;
+        }
+
+        /* Parent perspective example - stronger tilt */
+        .parent-perspective { perspective: 500px; }
+        .parent-perspective .box-1 { transform: rotateX(-45deg); }
+
+        /* Inline perspective() example - stronger tilt */
+        .inline-perspective .box-2 { transform: perspective(500px) rotateX(-45deg); }
+
+        /* translateZ requires perspective; increase translateZ and yaw */
+        .translateZ { perspective: 500px; }
+        .translateZ .box-3 { transform: translateZ(80px) rotateY(-22deg) rotateX(-12deg); }
+
+        /* preserve-3d / backface-visibility test: a stronger flip */
+        .preserve-3d .box-4 { width: 120px; height: 84px; position: relative; perspective: 600px; transform-style: preserve-3d; }
+        .preserve-3d .box-4 .face { position: absolute; inset: 0; display:flex;align-items:center;justify-content:center;border-radius:10px;backface-visibility: hidden; }
+        .preserve-3d .box-4 .face-front { background: linear-gradient(180deg,#34C759,#1FA84C); color: #021; }
+        .preserve-3d .box-4 .face-back { background: linear-gradient(180deg,#5AC8FA,#2AA7E0); color: #012; transform: rotateY(180deg); }
+        .preserve-3d .box-4:hover { transform: rotateY(220deg); }
+
+        .angled-pane .circular-progress .progress-bg {
+            stroke-width: 10;
+            stroke: rgba(255,255,255,0.22);
+        }
+
+        .angled-pane .circular-progress .progress-bar {
+            stroke-width: 12;
+            filter: drop-shadow(0 2px 8px rgba(255,149,0,0.45));
+        }
+
+        .angled-pane .time-text {
+            /* font-size: clamp(96px, 22vw, 180px); */
+            font-size: 96px;
+            font-weight: 700;
+            font-family: 'SF Pro Rounded', 'Avenir Next Condensed', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif;
+            letter-spacing: -1px;
+            /* line-height: 0.88; */
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            font-stretch: semi-expanded;
+            text-shadow:
+                0 3px 0 rgba(0,0,0,0.4),
+                0 8px 14px rgba(0,0,0,0.55);
+            /* transform: translateY(-2%) rotateX(-16deg) scaleY(1.62); */
+            /* transform:  translateY(45%) perspective(900px) rotateX(-22deg)  scaleY(2.12) scaleX(1.0); */
+            transform:  translateY(45%) perspective(900px) rotateX(-42deg)  scaleY(2.12) scaleX(1.0);
+            /* transform:  translateY(45%) scaleY(2.12); */
+            transform-origin: center bottom;
+        }
+
+        /* Dim styling for controls while running (still clickable) */
+        .angled-pane .dimmed {
+            opacity: 0.45;
+            filter: blur(3px);
+            transform: scale(1.015);
+            will-change: filter, transform;
+            transition: opacity 0.2s ease, filter 0.2s ease, transform 0.2s ease;
+        }
+
+        .angled-pane .preset-selector select {
+            font-size: 20px;
+        }
+
+        .angled-pane .controls {
+            position: relative;
+            z-index: 3;
+            gap: clamp(16px, 4vw, 28px);
+        }
+
+        .angled-pane .controls .btn {
+            width: 72px;
+            height: 72px;
+            font-size: 16px;
+            width: clamp(68px, 18vw, 80px);
+            height: clamp(68px, 18vw, 80px);
+            font-size: clamp(14px, 3.6vw, 17px);
+        }
+
+        .angled-pane .controls .btn-start,
+        .angled-pane .controls .btn-pause {
+            width: clamp(68px, 18vw, 80px);
+            height: clamp(68px, 18vw, 80px);
+            font-size: clamp(14px, 3.6vw, 17px);
+        }
+
+        .angled-pane .preset-selector {
+            position: relative;
+            z-index: 3;
+        }
+
+        .angled-pane .preset-selector select {
+            font-size: clamp(16px, 4.5vw, 20px);
+        }
+
+        @media (max-width: 400px) {
+            .angled-pane .timer-display {
+                width: var(--dial-size);
+                height: var(--dial-size);
+            }
+            .angled-pane .time-text {
+                font-size: clamp(70px, 18vw, 120px);
+            }
+        }
     </style>
 </head>
 <body>
     <div class="views-wrapper">
-        <!-- Desktop navigation for view switching -->
-        <div class="top-nav" id="topNav">
-            <button data-view="0" class="active">Custom</button>
-            <button data-view="1">Predefined</button>
-            <button data-view="2">Interval</button>
-            <button data-view="3">Stopwatch</button>
-        </div>
+        <!-- Desktop navigation for view switching removed as requested -->
         <div class="views-container" id="viewsContainer">
+            <!-- View 5: Predefined Timers (45° optimized) -->
+            <div class="view angled-pane" id="view5">
+                <div class="container">
+                    <div class="timer-display">
+                        <svg class="circular-progress" viewBox="0 0 280 280">
+                            <circle class="progress-bg" cx="140" cy="140" r="130"></circle>
+                            <!-- Non-uniformly spaced tick guides (compensated for perspective) -->
+                            <g id="segmentedTicks5"></g>
+                            <circle class="progress-bar" cx="140" cy="140" r="130" id="progressBar5"
+                                    stroke-dasharray="817" 
+                                    stroke-dashoffset="817"></circle>
+                        </svg>
+                        <div class="time-text" id="timeDisplay5">00:00</div>
+                    </div>
+
+                    <div class="preset-selector">
+                        <select id="presetSelect5">
+                            <option value="420">OPD - 7min</option>
+                            <option value="180">OPD - 3min</option>
+                            <option value="60">OPD - 1min</option>
+                        </select>
+                    </div>
+
+                    <div class="controls">
+                        <button class="btn btn-reset" id="resetBtn5" disabled>Reset</button>
+                        <button class="btn btn-start" id="startBtn5">Start</button>
+                        <button class="btn btn-pause hidden" id="pauseBtn5">Pause</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View 1.5: 3D Transform Test (inserted after View 1) -->
+            <div class="view" id="view1-3d">
+                <div class="container">
+                    <div class="view-title">3D Transform Test</div>
+                    <div class="test-3d-grid">
+                        <div class="test-3d-card parent-perspective">
+                            <div class="test-label">Parent perspective + rotateX</div>
+                            <div class="test-box box-1">A</div>
+                        </div>
+
+                        <div class="test-3d-card inline-perspective">
+                            <div class="test-label">Inline perspective() + rotateX</div>
+                            <div class="test-box box-2">B</div>
+                        </div>
+
+                        <div class="test-3d-card translateZ">
+                            <div class="test-label">translateZ (needs perspective)</div>
+                            <div class="test-box box-3">C</div>
+                        </div>
+
+                        <div class="test-3d-card preserve-3d">
+                            <div class="test-label">preserve-3d / backface</div>
+                            <div class="test-box box-4">
+                                <div class="face face-front">Front</div>
+                                <div class="face face-back">Back</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="font-size:14px;color:rgba(255,255,255,0.7);text-align:center;max-width:420px;margin-top:8px;">Tip: open Safari iOS, swipe to this pane and inspect whether each box tilts/appears 3D. Boxes are deliberately simple so you can see which transforms the browser honors.</div>
+                </div>
+            </div>
+
             <!-- View 1: Custom Timer (existing) -->
             <div class="view" id="view1">
                 <div class="container">
@@ -648,10 +878,13 @@
                     </div>
                 </div>
             </div>
+          
         </div>
 
         <div class="page-indicators">
             <div class="page-indicator active"></div>
+            <div class="page-indicator"></div>
+            <div class="page-indicator"></div>
             <div class="page-indicator"></div>
             <div class="page-indicator"></div>
             <div class="page-indicator"></div>
@@ -716,6 +949,300 @@
                 elapsedMs: 0,
                 running: false,
                 wakeLock: null
+            },
+            5: {
+                timer: null,
+                totalSeconds: 0,
+                remainingSeconds: 0,
+                presetSeconds: 420,
+                isOvertime: false,
+                overtimeSeconds: 0,
+                endTimeMs: 0,
+                remainingMs: 0,
+                lastRemainingSec: null,
+                overtimeStartMs: 0,
+                overtimeFrozenSeconds: 0,
+                overtimeElapsedMs: 0,
+                wakeLock: null,
+                lastBeepAt1Min: false
+            }
+        };
+
+        // ==================== VIEW 5: PREDEFINED TIMER (ANGLED) ====================
+        const view5 = {
+            timeDisplay: document.getElementById('timeDisplay5'),
+            presetSelect: document.getElementById('presetSelect5'),
+            startBtn: document.getElementById('startBtn5'),
+            pauseBtn: document.getElementById('pauseBtn5'),
+            resetBtn: document.getElementById('resetBtn5'),
+            ticksGroup: document.getElementById('segmentedTicks5'),
+            ticksBuilt: false,
+
+            buildPerspectiveTicks() {
+                if (this.ticksBuilt || !this.ticksGroup) return;
+                const cx = 140, cy = 140, rOuter = 130, rInner = 122;
+                const N = 60; // increments
+                const k = 0.5; // more spacing near top
+                const weights = Array.from({ length: N }, (_, i) => 1 + k * Math.cos((i / N) * 2 * Math.PI));
+                const sumW = weights.reduce((a, b) => a + b, 0);
+                let acc = 0;
+                const angles = weights.map(w => { const t = (acc / sumW) * 2 * Math.PI; acc += w; return t; });
+                for (let i = 0; i < N; i++) {
+                    const a = angles[i];
+                    const sin = Math.sin(a), cos = Math.cos(a);
+                    const x1 = cx + rInner * sin;
+                    const y1 = cy - rInner * cos;
+                    const x2 = cx + rOuter * sin;
+                    const y2 = cy - rOuter * cos;
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', x1.toFixed(2));
+                    line.setAttribute('y1', y1.toFixed(2));
+                    line.setAttribute('x2', x2.toFixed(2));
+                    line.setAttribute('y2', y2.toFixed(2));
+                    line.setAttribute('stroke', 'rgba(255,255,255,0.22)');
+                    line.setAttribute('stroke-width', '2');
+                    this.ticksGroup.appendChild(line);
+                }
+                this.ticksBuilt = true;
+            },
+            linearFill: document.getElementById('linearFill5'),
+            ticksGroup: document.getElementById('segmentedTicks5'),
+            ticksBuilt: false,
+
+            buildPerspectiveTicks() {
+                if (this.ticksBuilt || !this.ticksGroup) return;
+                const cx = 140, cy = 140, rOuter = 130, rInner = 122;
+                const N = 60; // increments
+                const k = 0.5; // weighting strength (more space at top)
+                // Build weights around the circle (theta=0 at top)
+                const weights = Array.from({ length: N }, (_, i) => 1 + k * Math.cos((i / N) * 2 * Math.PI));
+                const sumW = weights.reduce((a, b) => a + b, 0);
+                // Cumulative angles
+                let acc = 0;
+                const angles = weights.map(w => {
+                    const theta = (acc / sumW) * 2 * Math.PI;
+                    acc += w;
+                    return theta;
+                });
+                // Draw short ticks at computed angles
+                for (let i = 0; i < N; i++) {
+                    const a = angles[i];
+                    const sin = Math.sin(a), cos = Math.cos(a);
+                    const x1 = cx + rInner * sin;
+                    const y1 = cy - rInner * cos;
+                    const x2 = cx + rOuter * sin;
+                    const y2 = cy - rOuter * cos;
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', x1.toFixed(2));
+                    line.setAttribute('y1', y1.toFixed(2));
+                    line.setAttribute('x2', x2.toFixed(2));
+                    line.setAttribute('y2', y2.toFixed(2));
+                    line.setAttribute('stroke', 'rgba(255,255,255,0.22)');
+                    line.setAttribute('stroke-width', '2');
+                    this.ticksGroup.appendChild(line);
+                }
+                this.ticksBuilt = true;
+            },
+
+            updateDisplay() {
+                let displayText;
+                if (viewState[5].isOvertime) {
+                    displayText = '+' + formatTime(viewState[5].overtimeSeconds);
+                    this.timeDisplay.classList.add('overtime-indicator');
+                } else {
+                    displayText = formatTime(viewState[5].remainingSeconds);
+                    this.timeDisplay.classList.remove('overtime-indicator');
+                }
+                this.timeDisplay.textContent = displayText;
+
+                const progressEl = document.getElementById('progressBar5');
+                if (!viewState[5].isOvertime) {
+                    updateProgress('progressBar5', viewState[5].remainingSeconds, viewState[5].totalSeconds);
+
+                    // Special coloring for OPD - 7min preset
+                    if (viewState[5].totalSeconds === 420) {
+                        const rem = Math.max(0, viewState[5].remainingSeconds);
+                        const remainingMin = Math.ceil(rem / 60);
+                        if (remainingMin >= 7 || remainingMin === 1) {
+                            progressEl.style.stroke = '#ff9500';
+                        } else if (remainingMin <= 6 && remainingMin >= 2) {
+                            progressEl.style.stroke = '#34C759';
+                        } else {
+                            progressEl.style.stroke = '#ff9500';
+                        }
+                    } else {
+                        progressEl.style.stroke = '#ff9500';
+                    }
+                    // Update linear progress (full countdown)
+                    if (this.linearFill) {
+                        if (viewState[5].totalSeconds > 0) {
+                            const pct = 1 - (viewState[5].remainingSeconds / viewState[5].totalSeconds);
+                            this.linearFill.style.width = `${Math.max(0, Math.min(1, pct)) * 100}%`;
+                        } else {
+                            this.linearFill.style.width = '0%';
+                        }
+                        this.linearFill.style.background = progressEl.style.stroke || '#ff9500';
+                    }
+                } else {
+                    // In overtime, animate increasing indicator (count-up loop per 60s)
+                    const elapsedMs = viewState[5].overtimeElapsedMs || (viewState[5].overtimeSeconds * 1000);
+                    const cycleTotalSec = 60;
+                    const withinSec = (elapsedMs % (cycleTotalSec * 1000)) / 1000;
+                    updateProgress('progressBar5', withinSec, cycleTotalSec);
+                    progressEl.style.stroke = '#ff3b30';
+                    if (this.linearFill) {
+                        this.linearFill.style.width = '100%';
+                        this.linearFill.style.background = '#ff3b30';
+                    }
+                }
+            },
+
+            start() {
+                if (viewState[5].remainingSeconds === 0 && !viewState[5].isOvertime) {
+                    viewState[5].presetSeconds = parseInt(this.presetSelect.value);
+                    viewState[5].totalSeconds = viewState[5].presetSeconds;
+                    viewState[5].lastBeepAt1Min = false;
+                }
+
+                if (audioContext && audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+
+                // Initialize end time or resume
+                const now = performance.now();
+                if (!viewState[5].isOvertime) {
+                    if (viewState[5].remainingMs && viewState[5].remainingMs > 0) {
+                        viewState[5].endTimeMs = now + viewState[5].remainingMs;
+                    } else if (!viewState[5].endTimeMs) {
+                        viewState[5].endTimeMs = now + viewState[5].totalSeconds * 1000;
+                    }
+                    viewState[5].lastRemainingSec = null;
+                } else {
+                    // resuming overtime
+                    if (viewState[5].overtimeStartMs === 0) {
+                        viewState[5].overtimeStartMs = now - viewState[5].overtimeFrozenSeconds * 1000;
+                    }
+                }
+
+                noSleep.enable();
+                requestWakeLock(5);
+                
+                this.startBtn.classList.add('hidden');
+                this.pauseBtn.classList.remove('hidden');
+                this.resetBtn.disabled = false;
+                this.presetSelect.disabled = true;
+                // Dim preset and controls while running (still clickable)
+                this.presetSelect.classList.add('dimmed');
+                this.pauseBtn.classList.add('dimmed');
+                this.resetBtn.classList.add('dimmed');
+
+                const loop = () => {
+                    const now = performance.now();
+                    if (!viewState[5].isOvertime) {
+                        const remainingMs = Math.max(0, viewState[5].endTimeMs - now);
+                        const remainingSec = Math.ceil(remainingMs / 1000);
+                        viewState[5].remainingMs = remainingMs;
+                        viewState[5].remainingSeconds = remainingSec;
+
+                        if (viewState[5].lastRemainingSec !== remainingSec) {
+                            if (shouldBeepAt1Min(viewState[5].totalSeconds, remainingSec, viewState[5].lastBeepAt1Min)) {
+                                playBeep();
+                                viewState[5].lastBeepAt1Min = true;
+                            }
+                            if (shouldBeepCountdown(viewState[5].totalSeconds, remainingSec)) {
+                                playBeep();
+                            }
+                            viewState[5].lastRemainingSec = remainingSec;
+                        }
+
+                        if (remainingMs <= 0) {
+                            playCompletionBeep();
+                            viewState[5].isOvertime = true;
+                            viewState[5].overtimeSeconds = 0;
+                            viewState[5].overtimeFrozenSeconds = 0;
+                            viewState[5].overtimeStartMs = performance.now();
+                        }
+                    } else {
+                        // Overtime: count up precisely
+                        const elapsed = now - viewState[5].overtimeStartMs;
+                        viewState[5].overtimeElapsedMs = elapsed;
+                        viewState[5].overtimeSeconds = Math.floor(elapsed / 1000);
+                            // Update linear bar fill for full countdown
+                            if (this.linearFill) {
+                                if (viewState[5].totalSeconds > 0) {
+                                    const pct = 1 - (viewState[5].remainingSeconds / viewState[5].totalSeconds);
+                                    this.linearFill.style.width = `${Math.max(0, Math.min(1, pct)) * 100}%`;
+                                    this.linearFill.style.background = progressEl.style.stroke || '#ff9500';
+                                    this.linearFill.style.boxShadow = `0 2px 8px ${(progressEl.style.stroke || '#ff9500').replace(')', ',0.35)').replace('rgb', 'rgba')}`;
+                                } else {
+                                    this.linearFill.style.width = '0%';
+                                    this.linearFill.style.background = '#ff9500';
+                                }
+                            }
+                    }
+                    this.updateDisplay();
+                    viewState[5].timer = requestAnimationFrame(loop);
+                };
+                viewState[5].timer = requestAnimationFrame(loop);
+            },
+            pause() {
+                cancelAnimationFrame(viewState[5].timer);
+                viewState[5].timer = null;
+                if (!viewState[5].isOvertime) {
+                    viewState[5].remainingMs = Math.max(0, viewState[5].endTimeMs - performance.now());
+                    viewState[5].remainingSeconds = Math.ceil(viewState[5].remainingMs / 1000);
+                } else {
+                    // Freeze overtime
+                    viewState[5].overtimeFrozenSeconds = viewState[5].overtimeSeconds;
+                    viewState[5].overtimeStartMs = 0;
+                    viewState[5].overtimeElapsedMs = viewState[5].overtimeFrozenSeconds * 1000;
+                }
+                releaseWakeLock(5);
+                noSleep.disable();
+                
+                this.startBtn.classList.remove('hidden');
+                this.pauseBtn.classList.add('hidden');
+                // Restore clarity on controls
+                this.presetSelect.classList.remove('dimmed');
+                this.pauseBtn.classList.remove('dimmed');
+                this.resetBtn.classList.remove('dimmed');
+            },
+
+            stop() {
+                cancelAnimationFrame(viewState[5].timer);
+                viewState[5].timer = null;
+                releaseWakeLock(5);
+                noSleep.disable();
+                
+                this.startBtn.classList.remove('hidden');
+                this.pauseBtn.classList.add('hidden');
+                this.presetSelect.classList.remove('dimmed');
+                this.pauseBtn.classList.remove('dimmed');
+                this.resetBtn.classList.remove('dimmed');
+            },
+
+            reset() {
+                this.stop();
+                viewState[5].remainingSeconds = 0;
+                viewState[5].totalSeconds = 0;
+                viewState[5].isOvertime = false;
+                viewState[5].overtimeSeconds = 0;
+                viewState[5].endTimeMs = 0;
+                viewState[5].remainingMs = 0;
+                viewState[5].lastRemainingSec = null;
+                viewState[5].overtimeStartMs = 0;
+                viewState[5].overtimeFrozenSeconds = 0;
+                viewState[5].overtimeElapsedMs = 0;
+                viewState[5].lastBeepAt1Min = false;
+                this.updateDisplay();
+                this.resetBtn.disabled = true;
+                this.presetSelect.disabled = false;
+                // Restore default progress color
+                const progressEl = document.getElementById('progressBar5');
+                if (progressEl) progressEl.style.stroke = '#ff9500';
+                this.presetSelect.classList.remove('dimmed');
+                this.pauseBtn.classList.remove('dimmed');
+                this.resetBtn.classList.remove('dimmed');
             }
         };
 
@@ -780,6 +1307,7 @@
         const viewsContainer = document.getElementById('viewsContainer');
         const pageIndicators = document.querySelectorAll('.page-indicator');
         const topNav = document.getElementById('topNav');
+        const maxViewIndex = () => document.querySelectorAll('#viewsContainer .view').length - 1;
 
         function updateView() {
             const offset = -currentView * 100;
@@ -787,12 +1315,7 @@
             pageIndicators.forEach((indicator, index) => {
                 indicator.classList.toggle('active', index === currentView);
             });
-            // Update desktop nav active state
-            if (topNav) {
-                Array.from(topNav.querySelectorAll('button')).forEach((btn, i) => {
-                    btn.classList.toggle('active', i === currentView);
-                });
-            }
+            // Desktop nav removed
         }
 
         viewsContainer.addEventListener('touchstart', (e) => {
@@ -812,7 +1335,7 @@
             
             // Only handle horizontal swipes
             if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
-                if (deltaX < 0 && currentView < 3) {
+                if (deltaX < 0 && currentView < maxViewIndex()) {
                     // Swipe left - next view
                     currentView++;
                     updateView();
@@ -825,22 +1348,12 @@
         }
 
         // Desktop nav click handlers
-        if (topNav) {
-            topNav.addEventListener('click', (e) => {
-                const btn = e.target.closest('button[data-view]');
-                if (!btn) return;
-                const index = parseInt(btn.dataset.view);
-                if (!Number.isNaN(index)) {
-                    currentView = Math.max(0, Math.min(3, index));
-                    updateView();
-                }
-            });
-        }
+        // Desktop nav removed
 
         // Keyboard navigation (desktop): ArrowLeft/ArrowRight
         window.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowRight') {
-                if (currentView < 3) { currentView++; updateView(); }
+                if (currentView < maxViewIndex()) { currentView++; updateView(); }
             } else if (e.key === 'ArrowLeft') {
                 if (currentView > 0) { currentView--; updateView(); }
             }
@@ -1640,6 +2153,8 @@
         view2.updateDisplay();
         view3.init();
         view4.init();
+        view5.buildPerspectiveTicks();
+        view5.updateDisplay();
 
         // Event listeners for View 1
         view1.startBtn.addEventListener('click', () => view1.start());
@@ -1668,9 +2183,31 @@
         document.getElementById('pauseBtn4').addEventListener('click', () => view4.pause());
         document.getElementById('resetBtn4').addEventListener('click', () => view4.reset());
 
+        // Event listeners for View 5
+        document.getElementById('startBtn5').addEventListener('click', () => view5.start());
+        document.getElementById('pauseBtn5').addEventListener('click', () => view5.pause());
+        document.getElementById('resetBtn5').addEventListener('click', () => view5.reset());
+        document.getElementById('presetSelect5').addEventListener('change', () => {
+            const progressEl = document.getElementById('progressBar5');
+            if (progressEl) progressEl.style.stroke = '#ff9500';
+            view5.updateDisplay();
+        });
+
+        // Tap anywhere in View 5 (except controls/preset) to toggle start/pause
+        const view5Root = document.getElementById('view5');
+        view5Root.addEventListener('click', (e) => {
+            const t = e.target;
+            if (t.closest('.controls') || t.closest('.preset-selector')) return;
+            if (viewState[5].timer) {
+                view5.pause();
+            } else {
+                view5.start();
+            }
+        });
+
         // Handle page visibility changes to re-request wake lock if needed
         document.addEventListener('visibilitychange', async () => {
-            for (let view = 1; view <= 4; view++) {
+            for (let view = 1; view <= 5; view++) {
                 if (viewState[view].timer && document.visibilityState === 'visible') {
                     await requestWakeLock(view);
                 }
