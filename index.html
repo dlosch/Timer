@@ -38,7 +38,7 @@
             display: flex;
             height: 100%;
             transition: transform 0.3s ease-out;
-            width: 300%;
+            width: 400%;
         }
 
         .view {
@@ -63,7 +63,7 @@
 
         .page-indicators {
             position: absolute;
-            bottom: 20px;
+            bottom: calc(env(safe-area-inset-bottom, 0) + 20px);
             left: 50%;
             transform: translateX(-50%);
             display: flex;
@@ -395,10 +395,133 @@
                 height: 60px;
             }
         }
+
+        /* Analog stopwatch styles */
+        .analog-container {
+            width: 320px;
+            height: 320px;
+            position: relative;
+        }
+
+        .analog-svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .dial-bg {
+            fill: #000;
+            stroke: #3a3a3a;
+            stroke-width: 2;
+        }
+
+        .tick {
+            stroke: rgba(255,255,255,0.55);
+            stroke-width: 1;
+        }
+
+        .tick.major {
+            stroke-width: 2.5;
+        }
+
+        .hand-second {
+            stroke: #ff9500;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            /* Ensure SVG transforms use the SVG viewBox as reference */
+            transform-box: view-box;
+            /* Center of main dial (viewBox is 0 0 200 200) */
+            transform-origin: 50% 50%;
+        }
+
+        .hand-minute {
+            stroke: #ff9500;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            /* Ensure SVG transforms use the SVG viewBox as reference */
+            transform-box: view-box;
+            /* Rotate around subdial center at (100, 70) in SVG user units */
+            transform-origin: 100px 70px;
+        }
+
+        .center-dot {
+            fill: #ff9500;
+        }
+
+        .subdial {
+            fill: none;
+            stroke: rgba(255,255,255,0.25);
+            stroke-width: 1.2;
+        }
+
+        .subdial-tick {
+            stroke: rgba(255,255,255,0.55);
+            stroke-width: 1;
+        }
+
+        .dial-number {
+            fill: rgba(255,255,255,0.85);
+            font-size: 12px;
+            font-weight: 400;
+            text-anchor: middle;
+            dominant-baseline: middle;
+        }
+
+        .subdial-number {
+            fill: rgba(255,255,255,0.8);
+            font-size: 9px;
+            text-anchor: middle;
+            dominant-baseline: middle;
+        }
+
+        /* Desktop top navigation */
+        .top-nav {
+            position: absolute;
+            top: calc(env(safe-area-inset-top, 0) + 12px);
+            left: 50%;
+            transform: translateX(-50%);
+            display: none; /* enabled on desktop via media query */
+            gap: 8px;
+            z-index: 15;
+            background: rgba(0,0,0,0.35);
+            padding: 8px 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.15);
+            backdrop-filter: blur(6px);
+        }
+
+        .top-nav button {
+            background: transparent;
+            color: rgba(255,255,255,0.85);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 9999px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .top-nav button.active {
+            background: rgba(255,149,0,0.25);
+            border-color: rgba(255,149,0,0.7);
+            color: #fff;
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+            .top-nav { display: flex; }
+        }
+
+        /* (Reverted) Interval view controls positioning: use default flow */
     </style>
 </head>
 <body>
     <div class="views-wrapper">
+        <!-- Desktop navigation for view switching -->
+        <div class="top-nav" id="topNav">
+            <button data-view="0" class="active">Custom</button>
+            <button data-view="1">Predefined</button>
+            <button data-view="2">Interval</button>
+            <button data-view="3">Stopwatch</button>
+        </div>
         <div class="views-container" id="viewsContainer">
             <!-- View 1: Custom Timer (existing) -->
             <div class="view" id="view1">
@@ -442,7 +565,6 @@
             <!-- View 2: Predefined Timers -->
             <div class="view" id="view2">
                 <div class="container">
-                    <h2 class="view-title">Predefined Timers</h2>
                     <div class="timer-display">
                         <svg class="circular-progress" viewBox="0 0 280 280">
                             <circle class="progress-bg" cx="140" cy="140" r="130"></circle>
@@ -472,7 +594,6 @@
             <!-- View 3: Interval Timer -->
             <div class="view" id="view3">
                 <div class="container">
-                    <h2 class="view-title">Interval Timer</h2>
                     <div class="timer-display">
                         <svg class="circular-progress" viewBox="0 0 280 280">
                             <circle class="progress-bg" cx="140" cy="140" r="130"></circle>
@@ -484,17 +605,12 @@
                     </div>
 
                     <div class="interval-controls">
-                        <div class="interval-option selected" data-on="7" data-off="3">
-                            <h3>7 / 3 Intervals</h3>
-                            <p>7 seconds on, 3 seconds off</p>
-                        </div>
-                        <div class="interval-option" data-on="30" data-off="10">
-                            <h3>30 / 10 Intervals</h3>
-                            <p>30 seconds on, 10 seconds off</p>
-                        </div>
-                        <div class="interval-option" data-on="30" data-off="0">
-                            <h3>30 Second Continuous</h3>
-                            <p>30 seconds on, repeat</p>
+                        <div class="time-input" style="width:100%;max-width:300px;">
+                            <label>Intervals</label>
+                            <div class="picker-container" style="width:100%;">
+                                <div class="picker-highlight"></div>
+                                <div class="picker-scroll" id="intervalPicker3"></div>
+                            </div>
                         </div>
                         <div class="interval-status" id="intervalStatus3">Select an interval to start</div>
                     </div>
@@ -506,10 +622,37 @@
                     </div>
                 </div>
             </div>
+            <!-- View 4: Analog Stopwatch -->
+            <div class="view" id="view4">
+                <div class="container">
+                    <div class="analog-container">
+                        <svg id="analogSvg" class="analog-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="Analog Stopwatch">
+                            <circle cx="100" cy="100" r="96" class="dial-bg"></circle>
+                            <g id="ticks"></g>
+                            <g id="numbers"></g>
+                            <!-- Subdial for minutes (0-30) -->
+                            <circle cx="100" cy="70" r="24" class="subdial"></circle>
+                            <g id="subticks"></g>
+                            <g id="subnumbers"></g>
+                            <!-- Hands -->
+                            <line id="minuteHand" class="hand-minute" x1="100" y1="70" x2="100" y2="54"></line>
+                            <line id="secondHand" class="hand-second" x1="100" y1="100" x2="100" y2="12"></line>
+                            <circle cx="100" cy="100" r="3" class="center-dot"></circle>
+                        </svg>
+                    </div>
+                    <div class="time-text" id="timeDisplay4">00:00.00</div>
+                    <div class="controls">
+                        <button class="btn btn-reset" id="resetBtn4" disabled>Reset</button>
+                        <button class="btn btn-start" id="startBtn4">Start</button>
+                        <button class="btn btn-pause hidden" id="pauseBtn4">Pause</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="page-indicators">
             <div class="page-indicator active"></div>
+            <div class="page-indicator"></div>
             <div class="page-indicator"></div>
             <div class="page-indicator"></div>
         </div>
@@ -531,6 +674,9 @@
                 remainingSeconds: 0,
                 selectedMinutes: 5,
                 selectedSeconds: 0,
+                endTimeMs: 0,
+                remainingMs: 0,
+                lastRemainingSec: null,
                 wakeLock: null,
                 lastBeepAt1Min: false
             },
@@ -541,18 +687,35 @@
                 presetSeconds: 420,
                 isOvertime: false,
                 overtimeSeconds: 0,
+                endTimeMs: 0,
+                remainingMs: 0,
+                lastRemainingSec: null,
+                overtimeStartMs: 0,
+                overtimeFrozenSeconds: 0,
+                overtimeElapsedMs: 0,
                 wakeLock: null,
                 lastBeepAt1Min: false
             },
             3: {
                 timer: null,
-                currentPhase: 'on', // 'on' or 'off'
+                currentPhase: 'on', // 'countdown' | 'on' | 'off'
                 remainingSeconds: 0,
                 onDuration: 7,
                 offDuration: 3,
                 totalSeconds: 0,
+                phaseEndTimeMs: 0,
+                phaseRemainingMs: 0,
+                lastRemainingSec: null,
                 wakeLock: null,
-                lastBeepAt1Min: false
+                lastBeepAt1Min: false,
+                countdownDuration: 5
+            },
+            4: {
+                timer: null, // will hold RAF id when running
+                startTime: 0,
+                elapsedMs: 0,
+                running: false,
+                wakeLock: null
             }
         };
 
@@ -616,6 +779,7 @@
 
         const viewsContainer = document.getElementById('viewsContainer');
         const pageIndicators = document.querySelectorAll('.page-indicator');
+        const topNav = document.getElementById('topNav');
 
         function updateView() {
             const offset = -currentView * 100;
@@ -623,6 +787,12 @@
             pageIndicators.forEach((indicator, index) => {
                 indicator.classList.toggle('active', index === currentView);
             });
+            // Update desktop nav active state
+            if (topNav) {
+                Array.from(topNav.querySelectorAll('button')).forEach((btn, i) => {
+                    btn.classList.toggle('active', i === currentView);
+                });
+            }
         }
 
         viewsContainer.addEventListener('touchstart', (e) => {
@@ -642,7 +812,7 @@
             
             // Only handle horizontal swipes
             if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
-                if (deltaX < 0 && currentView < 2) {
+                if (deltaX < 0 && currentView < 3) {
                     // Swipe left - next view
                     currentView++;
                     updateView();
@@ -653,6 +823,28 @@
                 }
             }
         }
+
+        // Desktop nav click handlers
+        if (topNav) {
+            topNav.addEventListener('click', (e) => {
+                const btn = e.target.closest('button[data-view]');
+                if (!btn) return;
+                const index = parseInt(btn.dataset.view);
+                if (!Number.isNaN(index)) {
+                    currentView = Math.max(0, Math.min(3, index));
+                    updateView();
+                }
+            });
+        }
+
+        // Keyboard navigation (desktop): ArrowLeft/ArrowRight
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') {
+                if (currentView < 3) { currentView++; updateView(); }
+            } else if (e.key === 'ArrowLeft') {
+                if (currentView > 0) { currentView--; updateView(); }
+            }
+        });
 
         // Wake Lock
         async function requestWakeLock(view) {
@@ -793,53 +985,73 @@
             },
 
             start() {
-                if (viewState[1].remainingSeconds === 0) {
+                // Compute total on first start
+                if (viewState[1].totalSeconds === 0 || viewState[1].remainingSeconds === 0) {
                     viewState[1].totalSeconds = viewState[1].selectedMinutes * 60 + viewState[1].selectedSeconds;
-                    viewState[1].remainingSeconds = viewState[1].totalSeconds;
-                    viewState[1].lastBeepAt1Min = false;
+                    if (viewState[1].totalSeconds <= 0) return;
                 }
-
-                if (viewState[1].remainingSeconds <= 0) return;
 
                 // Enable audio context on user interaction
                 if (audioContext && audioContext.state === 'suspended') {
                     audioContext.resume();
                 }
 
+                // Set end time (fresh or resume)
+                const now = performance.now();
+                if (viewState[1].remainingMs && viewState[1].remainingMs > 0) {
+                    viewState[1].endTimeMs = now + viewState[1].remainingMs;
+                } else if (!viewState[1].endTimeMs) {
+                    viewState[1].endTimeMs = now + viewState[1].totalSeconds * 1000;
+                }
+                viewState[1].lastRemainingSec = null;
+                viewState[1].lastBeepAt1Min = false;
+
                 noSleep.enable();
                 requestWakeLock(1);
-                
+
                 this.startBtn.classList.add('hidden');
                 this.pauseBtn.classList.remove('hidden');
                 this.resetBtn.disabled = false;
                 this.timePicker.style.opacity = '0.5';
                 this.disablePickers();
 
-                viewState[1].timer = setInterval(() => {
-                    viewState[1].remainingSeconds--;
+                const loop = () => {
+                    const now = performance.now();
+                    let remainingMs = Math.max(0, viewState[1].endTimeMs - now);
+                    const remainingSec = Math.ceil(remainingMs / 1000);
+                    viewState[1].remainingMs = remainingMs;
+                    viewState[1].remainingSeconds = remainingSec;
                     this.updateDisplay();
 
-                    // Beep at 1 minute for timers >= 5 minutes
-                    if (shouldBeepAt1Min(viewState[1].totalSeconds, viewState[1].remainingSeconds, viewState[1].lastBeepAt1Min)) {
-                        playBeep();
-                        viewState[1].lastBeepAt1Min = true;
+                    // Beeps only when whole second changes
+                    if (viewState[1].lastRemainingSec !== remainingSec) {
+                        if (shouldBeepAt1Min(viewState[1].totalSeconds, remainingSec, viewState[1].lastBeepAt1Min)) {
+                            playBeep();
+                            viewState[1].lastBeepAt1Min = true;
+                        }
+                        if (shouldBeepCountdown(viewState[1].totalSeconds, remainingSec)) {
+                            playBeep();
+                        }
+                        viewState[1].lastRemainingSec = remainingSec;
                     }
 
-                    // Countdown beeps
-                    if (shouldBeepCountdown(viewState[1].totalSeconds, viewState[1].remainingSeconds)) {
-                        playBeep();
-                    }
-
-                    if (viewState[1].remainingSeconds <= 0) {
+                    if (remainingMs <= 0) {
                         this.stop();
                         playCompletionBeep();
+                        return;
                     }
-                }, 1000);
+                    viewState[1].timer = requestAnimationFrame(loop);
+                };
+                viewState[1].timer = requestAnimationFrame(loop);
             },
 
             pause() {
-                clearInterval(viewState[1].timer);
+                cancelAnimationFrame(viewState[1].timer);
                 viewState[1].timer = null;
+                // Freeze remaining time
+                viewState[1].remainingMs = Math.max(0, viewState[1].endTimeMs - performance.now());
+                viewState[1].remainingSeconds = Math.ceil(viewState[1].remainingMs / 1000);
+                this.updateDisplay();
                 releaseWakeLock(1);
                 noSleep.disable();
                 
@@ -848,7 +1060,7 @@
             },
 
             stop() {
-                clearInterval(viewState[1].timer);
+                cancelAnimationFrame(viewState[1].timer);
                 viewState[1].timer = null;
                 releaseWakeLock(1);
                 noSleep.disable();
@@ -862,6 +1074,9 @@
                 viewState[1].remainingSeconds = 0;
                 viewState[1].totalSeconds = 0;
                 viewState[1].lastBeepAt1Min = false;
+                viewState[1].endTimeMs = 0;
+                viewState[1].remainingMs = 0;
+                viewState[1].lastRemainingSec = null;
                 this.updateDisplay();
                 this.resetBtn.disabled = true;
                 this.timePicker.style.opacity = '1';
@@ -888,11 +1103,37 @@
                 }
                 this.timeDisplay.textContent = displayText;
 
+                const progressEl = document.getElementById('progressBar2');
                 if (!viewState[2].isOvertime) {
                     updateProgress('progressBar2', viewState[2].remainingSeconds, viewState[2].totalSeconds);
+
+                    // Special coloring for OPD - 7min preset
+                    if (viewState[2].totalSeconds === 420) {
+                        const rem = Math.max(0, viewState[2].remainingSeconds);
+                        const remainingMin = Math.ceil(rem / 60);
+                        // First minute (7th minute): default orange
+                        // Minutes 6..2: green
+                        // Last minute (1): back to orange
+                        if (remainingMin >= 7 || remainingMin === 1) {
+                            progressEl.style.stroke = '#ff9500';
+                        } else if (remainingMin <= 6 && remainingMin >= 2) {
+                            progressEl.style.stroke = '#34C759';
+                        } else {
+                            // Fallback to default
+                            progressEl.style.stroke = '#ff9500';
+                        }
+                    } else {
+                        // Other presets use default color
+                        progressEl.style.stroke = '#ff9500';
+                    }
                 } else {
-                    // In overtime, show empty progress bar
-                    updateProgress('progressBar2', 0, 1);
+                    // In overtime, animate increasing indicator (count-up loop per 60s)
+                    const elapsedMs = viewState[2].overtimeElapsedMs || (viewState[2].overtimeSeconds * 1000);
+                    const cycleTotalSec = 60;
+                    const withinSec = (elapsedMs % (cycleTotalSec * 1000)) / 1000;
+                    updateProgress('progressBar2', withinSec, cycleTotalSec);
+                    // Turn circle red in overtime (match digital clock)
+                    progressEl.style.stroke = '#ff3b30';
                 }
             },
 
@@ -900,14 +1141,27 @@
                 if (viewState[2].remainingSeconds === 0 && !viewState[2].isOvertime) {
                     viewState[2].presetSeconds = parseInt(this.presetSelect.value);
                     viewState[2].totalSeconds = viewState[2].presetSeconds;
-                    viewState[2].remainingSeconds = viewState[2].totalSeconds;
-                    viewState[2].isOvertime = false;
-                    viewState[2].overtimeSeconds = 0;
                     viewState[2].lastBeepAt1Min = false;
                 }
 
                 if (audioContext && audioContext.state === 'suspended') {
                     audioContext.resume();
+                }
+
+                // Initialize end time or resume
+                const now = performance.now();
+                if (!viewState[2].isOvertime) {
+                    if (viewState[2].remainingMs && viewState[2].remainingMs > 0) {
+                        viewState[2].endTimeMs = now + viewState[2].remainingMs;
+                    } else if (!viewState[2].endTimeMs) {
+                        viewState[2].endTimeMs = now + viewState[2].totalSeconds * 1000;
+                    }
+                    viewState[2].lastRemainingSec = null;
+                } else {
+                    // resuming overtime
+                    if (viewState[2].overtimeStartMs === 0) {
+                        viewState[2].overtimeStartMs = now - viewState[2].overtimeFrozenSeconds * 1000;
+                    }
                 }
 
                 noSleep.enable();
@@ -918,38 +1172,56 @@
                 this.resetBtn.disabled = false;
                 this.presetSelect.disabled = true;
 
-                viewState[2].timer = setInterval(() => {
+                const loop = () => {
+                    const now = performance.now();
                     if (!viewState[2].isOvertime) {
-                        viewState[2].remainingSeconds--;
-                        
-                        // Beep at 1 minute for timers >= 5 minutes
-                        if (shouldBeepAt1Min(viewState[2].totalSeconds, viewState[2].remainingSeconds, viewState[2].lastBeepAt1Min)) {
-                            playBeep();
-                            viewState[2].lastBeepAt1Min = true;
+                        const remainingMs = Math.max(0, viewState[2].endTimeMs - now);
+                        const remainingSec = Math.ceil(remainingMs / 1000);
+                        viewState[2].remainingMs = remainingMs;
+                        viewState[2].remainingSeconds = remainingSec;
+
+                        if (viewState[2].lastRemainingSec !== remainingSec) {
+                            if (shouldBeepAt1Min(viewState[2].totalSeconds, remainingSec, viewState[2].lastBeepAt1Min)) {
+                                playBeep();
+                                viewState[2].lastBeepAt1Min = true;
+                            }
+                            if (shouldBeepCountdown(viewState[2].totalSeconds, remainingSec)) {
+                                playBeep();
+                            }
+                            viewState[2].lastRemainingSec = remainingSec;
                         }
 
-                        // Countdown beeps
-                        if (shouldBeepCountdown(viewState[2].totalSeconds, viewState[2].remainingSeconds)) {
-                            playBeep();
-                        }
-
-                        if (viewState[2].remainingSeconds <= 0) {
+                        if (remainingMs <= 0) {
                             playCompletionBeep();
                             viewState[2].isOvertime = true;
                             viewState[2].overtimeSeconds = 0;
+                            viewState[2].overtimeFrozenSeconds = 0;
+                            viewState[2].overtimeStartMs = performance.now();
                         }
                     } else {
-                        // In overtime, count up
-                        viewState[2].overtimeSeconds++;
+                        // Overtime: count up precisely
+                        const elapsed = now - viewState[2].overtimeStartMs;
+                        viewState[2].overtimeElapsedMs = elapsed;
+                        viewState[2].overtimeSeconds = Math.floor(elapsed / 1000);
                     }
-                    
                     this.updateDisplay();
-                }, 1000);
+                    viewState[2].timer = requestAnimationFrame(loop);
+                };
+                viewState[2].timer = requestAnimationFrame(loop);
             },
 
             pause() {
-                clearInterval(viewState[2].timer);
+                cancelAnimationFrame(viewState[2].timer);
                 viewState[2].timer = null;
+                if (!viewState[2].isOvertime) {
+                    viewState[2].remainingMs = Math.max(0, viewState[2].endTimeMs - performance.now());
+                    viewState[2].remainingSeconds = Math.ceil(viewState[2].remainingMs / 1000);
+                } else {
+                    // Freeze overtime
+                    viewState[2].overtimeFrozenSeconds = viewState[2].overtimeSeconds;
+                    viewState[2].overtimeStartMs = 0;
+                    viewState[2].overtimeElapsedMs = viewState[2].overtimeFrozenSeconds * 1000;
+                }
                 releaseWakeLock(2);
                 noSleep.disable();
                 
@@ -958,7 +1230,7 @@
             },
 
             stop() {
-                clearInterval(viewState[2].timer);
+                cancelAnimationFrame(viewState[2].timer);
                 viewState[2].timer = null;
                 releaseWakeLock(2);
                 noSleep.disable();
@@ -973,10 +1245,19 @@
                 viewState[2].totalSeconds = 0;
                 viewState[2].isOvertime = false;
                 viewState[2].overtimeSeconds = 0;
+                viewState[2].endTimeMs = 0;
+                viewState[2].remainingMs = 0;
+                viewState[2].lastRemainingSec = null;
+                viewState[2].overtimeStartMs = 0;
+                viewState[2].overtimeFrozenSeconds = 0;
+                viewState[2].overtimeElapsedMs = 0;
                 viewState[2].lastBeepAt1Min = false;
                 this.updateDisplay();
                 this.resetBtn.disabled = true;
                 this.presetSelect.disabled = false;
+                // Restore default progress color
+                const progressEl = document.getElementById('progressBar2');
+                if (progressEl) progressEl.style.stroke = '#ff9500';
             }
         };
 
@@ -987,25 +1268,68 @@
             pauseBtn: document.getElementById('pauseBtn3'),
             resetBtn: document.getElementById('resetBtn3'),
             intervalStatus: document.getElementById('intervalStatus3'),
-            intervalOptions: document.querySelectorAll('.interval-option'),
+            intervalPicker: document.getElementById('intervalPicker3'),
 
             init() {
-                // Set default interval
-                viewState[3].onDuration = 7;
-                viewState[3].offDuration = 3;
-                
-                // Add click handlers to interval options
-                this.intervalOptions.forEach(option => {
-                    option.addEventListener('click', () => {
-                        // Don't allow changing during active timer
-                        if (viewState[3].timer) return;
-                        
-                        this.intervalOptions.forEach(opt => opt.classList.remove('selected'));
-                        option.classList.add('selected');
-                        
-                        viewState[3].onDuration = parseInt(option.dataset.on);
-                        viewState[3].offDuration = parseInt(option.dataset.off);
-                    });
+                // Build picker options
+                const options = [
+                    { label: '7 / 3 Intervals', on: 7, off: 3 },
+                    { label: '30 / 10 Intervals', on: 30, off: 10 },
+                    { label: '30s Continuous', on: 30, off: 0 },
+                ];
+                this.intervalOptionsData = options;
+
+                options.forEach((opt, idx) => {
+                    const item = document.createElement('div');
+                    item.className = 'picker-item';
+                    item.textContent = opt.label;
+                    item.dataset.index = idx;
+                    this.intervalPicker.appendChild(item);
+                });
+
+                // Default selection (index 0)
+                this.updatePickerScroll(this.intervalPicker, 0);
+                this.updatePickerHighlight(this.intervalPicker);
+                viewState[3].onDuration = options[0].on;
+                viewState[3].offDuration = options[0].off;
+
+                // Scroll handler
+                this.setupPickerScrollHandler(this.intervalPicker, (valueIndex) => {
+                    const opt = this.intervalOptionsData[Math.max(0, Math.min(this.intervalOptionsData.length - 1, valueIndex))];
+                    if (!viewState[3].timer) {
+                        viewState[3].onDuration = opt.on;
+                        viewState[3].offDuration = opt.off;
+                    }
+                });
+            },
+
+            // Picker helpers (mirrored from view1)
+            updatePickerScroll(picker, value) {
+                const itemHeight = 40;
+                picker.scrollTop = value * itemHeight;
+            },
+            getPickerValue(picker) {
+                const itemHeight = 40;
+                const scrollTop = picker.scrollTop;
+                return Math.round(scrollTop / itemHeight);
+            },
+            updatePickerHighlight(picker) {
+                const items = picker.querySelectorAll('.picker-item');
+                const centerIndex = this.getPickerValue(picker);
+                items.forEach((item, index) => {
+                    if (index === centerIndex) item.classList.add('active');
+                    else item.classList.remove('active');
+                });
+            },
+            setupPickerScrollHandler(picker, valueSetter) {
+                let scrollTimeout;
+                picker.addEventListener('scroll', () => {
+                    clearTimeout(scrollTimeout);
+                    scrollTimeout = setTimeout(() => {
+                        const value = this.getPickerValue(picker);
+                        valueSetter(value);
+                        this.updatePickerHighlight(picker);
+                    }, 100);
                 });
             },
 
@@ -1013,7 +1337,11 @@
                 this.timeDisplay.textContent = formatTime(viewState[3].remainingSeconds);
                 
                 // Update progress based on current phase
-                if (viewState[3].currentPhase === 'on') {
+                if (viewState[3].currentPhase === 'countdown') {
+                    updateProgress('progressBar3', viewState[3].remainingSeconds, viewState[3].countdownDuration);
+                    this.intervalStatus.textContent = 'STARTING - ' + formatTime(viewState[3].remainingSeconds);
+                    this.intervalStatus.style.background = 'rgba(255, 149, 0, 0.3)';
+                } else if (viewState[3].currentPhase === 'on') {
                     updateProgress('progressBar3', viewState[3].remainingSeconds, viewState[3].onDuration);
                     this.intervalStatus.textContent = 'ON - ' + formatTime(viewState[3].remainingSeconds);
                     this.intervalStatus.style.background = 'rgba(255, 149, 0, 0.3)';
@@ -1026,11 +1354,17 @@
 
             start() {
                 if (viewState[3].timer === null) {
-                    // Starting fresh
-                    viewState[3].currentPhase = 'on';
-                    viewState[3].remainingSeconds = viewState[3].onDuration;
-                    viewState[3].totalSeconds = viewState[3].onDuration;
-                    viewState[3].lastBeepAt1Min = false;
+                    // Starting fresh or resume
+                    if (!viewState[3].phaseEndTimeMs) {
+                        // Always start with a 5s countdown with beeps
+                        viewState[3].currentPhase = 'countdown';
+                        viewState[3].totalSeconds = viewState[3].countdownDuration;
+                        viewState[3].phaseEndTimeMs = performance.now() + viewState[3].countdownDuration * 1000;
+                        viewState[3].lastRemainingSec = null;
+                        viewState[3].lastBeepAt1Min = false;
+                    } else if (viewState[3].phaseRemainingMs && viewState[3].phaseRemainingMs > 0) {
+                        viewState[3].phaseEndTimeMs = performance.now() + viewState[3].phaseRemainingMs;
+                    }
                 }
 
                 if (audioContext && audioContext.state === 'suspended') {
@@ -1044,49 +1378,67 @@
                 this.pauseBtn.classList.remove('hidden');
                 this.resetBtn.disabled = false;
 
-                viewState[3].timer = setInterval(() => {
-                    viewState[3].remainingSeconds--;
-                    
-                    // Beep at 1 minute for current phase >= 5 minutes
-                    if (shouldBeepAt1Min(viewState[3].totalSeconds, viewState[3].remainingSeconds, viewState[3].lastBeepAt1Min)) {
-                        playBeep();
-                        viewState[3].lastBeepAt1Min = true;
+                const loop = () => {
+                    const now = performance.now();
+                    const remainingMs = Math.max(0, viewState[3].phaseEndTimeMs - now);
+                    const remainingSec = Math.ceil(remainingMs / 1000);
+                    viewState[3].phaseRemainingMs = remainingMs;
+                    viewState[3].remainingSeconds = remainingSec;
+
+                    if (viewState[3].lastRemainingSec !== remainingSec) {
+                        if (viewState[3].currentPhase === 'countdown') {
+                            // Beep every second during the 5s countdown
+                            if (remainingSec > 0) playBeep();
+                        } else {
+                            if (shouldBeepAt1Min(viewState[3].totalSeconds, remainingSec, viewState[3].lastBeepAt1Min)) {
+                                playBeep();
+                                viewState[3].lastBeepAt1Min = true;
+                            }
+                            if (shouldBeepCountdown(viewState[3].totalSeconds, remainingSec)) {
+                                playBeep();
+                            }
+                        }
+                        viewState[3].lastRemainingSec = remainingSec;
                     }
 
-                    // Countdown beeps
-                    if (shouldBeepCountdown(viewState[3].totalSeconds, viewState[3].remainingSeconds)) {
-                        playBeep();
-                    }
-
-                    if (viewState[3].remainingSeconds <= 0) {
+                    if (remainingMs <= 0) {
                         playCompletionBeep();
-                        
                         // Switch phase
-                        if (viewState[3].currentPhase === 'on') {
+                        if (viewState[3].currentPhase === 'countdown') {
+                            // Start the actual ON phase after countdown
+                            viewState[3].currentPhase = 'on';
+                            viewState[3].totalSeconds = viewState[3].onDuration;
+                            viewState[3].phaseEndTimeMs = performance.now() + viewState[3].onDuration * 1000;
+                        } else if (viewState[3].currentPhase === 'on') {
                             if (viewState[3].offDuration > 0) {
                                 viewState[3].currentPhase = 'off';
-                                viewState[3].remainingSeconds = viewState[3].offDuration;
                                 viewState[3].totalSeconds = viewState[3].offDuration;
+                                viewState[3].phaseEndTimeMs = performance.now() + viewState[3].offDuration * 1000;
                             } else {
                                 // No off duration, restart on phase
-                                viewState[3].remainingSeconds = viewState[3].onDuration;
                                 viewState[3].totalSeconds = viewState[3].onDuration;
+                                viewState[3].phaseEndTimeMs = performance.now() + viewState[3].onDuration * 1000;
                             }
                         } else {
                             viewState[3].currentPhase = 'on';
-                            viewState[3].remainingSeconds = viewState[3].onDuration;
                             viewState[3].totalSeconds = viewState[3].onDuration;
+                            viewState[3].phaseEndTimeMs = performance.now() + viewState[3].onDuration * 1000;
                         }
                         viewState[3].lastBeepAt1Min = false;
                     }
-                    
+
                     this.updateDisplay();
-                }, 1000);
+                    viewState[3].timer = requestAnimationFrame(loop);
+                };
+                viewState[3].timer = requestAnimationFrame(loop);
             },
 
             pause() {
-                clearInterval(viewState[3].timer);
+                cancelAnimationFrame(viewState[3].timer);
                 viewState[3].timer = null;
+                viewState[3].phaseRemainingMs = Math.max(0, viewState[3].phaseEndTimeMs - performance.now());
+                viewState[3].remainingSeconds = Math.ceil(viewState[3].phaseRemainingMs / 1000);
+                this.updateDisplay();
                 releaseWakeLock(3);
                 noSleep.disable();
                 
@@ -1095,7 +1447,7 @@
             },
 
             stop() {
-                clearInterval(viewState[3].timer);
+                cancelAnimationFrame(viewState[3].timer);
                 viewState[3].timer = null;
                 releaseWakeLock(3);
                 noSleep.disable();
@@ -1109,11 +1461,174 @@
                 viewState[3].currentPhase = 'on';
                 viewState[3].remainingSeconds = 0;
                 viewState[3].totalSeconds = 0;
+                viewState[3].phaseEndTimeMs = 0;
+                viewState[3].phaseRemainingMs = 0;
+                viewState[3].lastRemainingSec = null;
                 viewState[3].lastBeepAt1Min = false;
                 this.intervalStatus.textContent = 'Select an interval to start';
                 this.intervalStatus.style.background = 'rgba(0, 0, 0, 0.3)';
                 this.timeDisplay.textContent = '00:00';
                 updateProgress('progressBar3', 0, 1);
+                this.resetBtn.disabled = true;
+            }
+        };
+
+        // ==================== VIEW 4: ANALOG STOPWATCH ====================
+        const view4 = {
+            timeDisplay: null,
+            startBtn: null,
+            pauseBtn: null,
+            resetBtn: null,
+            secondHand: null,
+            minuteHand: null,
+            ticksGroup: null,
+            subticksGroup: null,
+            numbersGroup: null,
+            subnumbersGroup: null,
+
+            init() {
+                this.timeDisplay = document.getElementById('timeDisplay4');
+                this.startBtn = document.getElementById('startBtn4');
+                this.pauseBtn = document.getElementById('pauseBtn4');
+                this.resetBtn = document.getElementById('resetBtn4');
+                this.secondHand = document.getElementById('secondHand');
+                this.minuteHand = document.getElementById('minuteHand');
+                this.ticksGroup = document.getElementById('ticks');
+                this.subticksGroup = document.getElementById('subticks');
+                this.numbersGroup = document.getElementById('numbers');
+                this.subnumbersGroup = document.getElementById('subnumbers');
+
+                // Build main dial ticks (60)
+                for (let i = 0; i < 60; i++) {
+                    const angle = (i / 60) * 2 * Math.PI;
+                    const cos = Math.cos(angle);
+                    const sin = Math.sin(angle);
+                    const rOuter = 94;
+                    const rInner = i % 5 === 0 ? 88 : 90.5;
+                    const x1 = 100 + rInner * sin;
+                    const y1 = 100 - rInner * cos;
+                    const x2 = 100 + rOuter * sin;
+                    const y2 = 100 - rOuter * cos;
+                    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+                    line.setAttribute('x1', x1.toFixed(2));
+                    line.setAttribute('y1', y1.toFixed(2));
+                    line.setAttribute('x2', x2.toFixed(2));
+                    line.setAttribute('y2', y2.toFixed(2));
+                    line.setAttribute('class', i % 5 === 0 ? 'tick major' : 'tick');
+                    this.ticksGroup.appendChild(line);
+                }
+
+                // Add outer numbers at every 5 seconds
+                for (let i = 5; i <= 60; i += 5) {
+                    const angle = (i / 60) * 2 * Math.PI;
+                    const cos = Math.cos(angle);
+                    const sin = Math.sin(angle);
+                    const rText = 78; // radius for text placement
+                    const x = 100 + rText * Math.sin(angle);
+                    const y = 100 - rText * Math.cos(angle);
+                    const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+                    text.setAttribute('x', x.toFixed(2));
+                    text.setAttribute('y', y.toFixed(2));
+                    text.setAttribute('class', 'dial-number');
+                    text.textContent = i.toString();
+                    this.numbersGroup.appendChild(text);
+                }
+
+                // Build subdial ticks (30 min)
+                for (let i = 0; i < 30; i++) {
+                    const angle = (i / 30) * 2 * Math.PI;
+                    const cos = Math.cos(angle);
+                    const sin = Math.sin(angle);
+                    const rOuter = 24;
+                    const rInner = i % 5 === 0 ? 19 : 21.5;
+                    const cx = 100, cy = 70;
+                    const x1 = cx + rInner * sin;
+                    const y1 = cy - rInner * cos;
+                    const x2 = cx + rOuter * sin;
+                    const y2 = cy - rOuter * cos;
+                    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+                    line.setAttribute('x1', x1.toFixed(2));
+                    line.setAttribute('y1', y1.toFixed(2));
+                    line.setAttribute('x2', x2.toFixed(2));
+                    line.setAttribute('y2', y2.toFixed(2));
+                    line.setAttribute('class', 'subdial-tick');
+                    this.subticksGroup.appendChild(line);
+                }
+
+                // Add subdial numbers every 5 minutes (5..30)
+                for (let i = 5; i <= 30; i += 5) {
+                    const angle = (i / 30) * 2 * Math.PI;
+                    const rText = 14; // text radius inside subdial
+                    const cx = 100, cy = 70;
+                    const x = cx + rText * Math.sin(angle);
+                    const y = cy - rText * Math.cos(angle);
+                    const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+                    text.setAttribute('x', x.toFixed(2));
+                    text.setAttribute('y', y.toFixed(2));
+                    text.setAttribute('class', 'subdial-number');
+                    text.textContent = i.toString();
+                    this.subnumbersGroup.appendChild(text);
+                }
+
+                this.updateDisplay(0);
+            },
+
+            updateDisplay(ms) {
+                const totalMs = Math.max(0, ms);
+                const minutes = Math.floor(totalMs / 60000);
+                const seconds = Math.floor((totalMs % 60000) / 1000);
+                const centi = Math.floor((totalMs % 1000) / 10);
+                this.timeDisplay.textContent = `${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}.${String(centi).padStart(2,'0')}`;
+
+                // Seconds hand: full rotation every 60s
+                const secAngle = (totalMs % 60000) / 60000 * 360;
+                this.secondHand.style.transform = `rotate(${secAngle}deg)`;
+
+                // Minute subdial hand: full rotation every 30 minutes
+                const minutesElapsed = totalMs / 60000; // float
+                const subAngle = (minutesElapsed % 30) / 30 * 360;
+                this.minuteHand.style.transform = `rotate(${subAngle}deg)`;
+            },
+
+            loop() {
+                if (!viewState[4].running) return;
+                const now = performance.now();
+                const ms = viewState[4].elapsedMs + (now - viewState[4].startTime);
+                this.updateDisplay(ms);
+                viewState[4].timer = requestAnimationFrame(() => this.loop());
+            },
+
+            start() {
+                if (!viewState[4].running) {
+                    viewState[4].running = true;
+                    viewState[4].startTime = performance.now();
+                    noSleep.enable();
+                    requestWakeLock(4);
+                    this.startBtn.classList.add('hidden');
+                    this.pauseBtn.classList.remove('hidden');
+                    this.resetBtn.disabled = false;
+                    viewState[4].timer = requestAnimationFrame(() => this.loop());
+                }
+            },
+
+            pause() {
+                if (viewState[4].running) {
+                    cancelAnimationFrame(viewState[4].timer);
+                    viewState[4].timer = null;
+                    const now = performance.now();
+                    viewState[4].elapsedMs += (now - viewState[4].startTime);
+                    viewState[4].running = false;
+                    releaseWakeLock(4);
+                    noSleep.disable();
+                    this.startBtn.classList.remove('hidden');
+                    this.pauseBtn.classList.add('hidden');
+                }
+            },
+
+            reset() {
+                this.pause();
+                viewState[4].elapsedMs = 0;
+                this.updateDisplay(0);
                 this.resetBtn.disabled = true;
             }
         };
@@ -1124,6 +1639,7 @@
         view1.updateDisplay();
         view2.updateDisplay();
         view3.init();
+        view4.init();
 
         // Event listeners for View 1
         view1.startBtn.addEventListener('click', () => view1.start());
@@ -1134,15 +1650,27 @@
         view2.startBtn.addEventListener('click', () => view2.start());
         view2.pauseBtn.addEventListener('click', () => view2.pause());
         view2.resetBtn.addEventListener('click', () => view2.reset());
+        // Ensure color resets appropriately when changing presets
+        view2.presetSelect.addEventListener('change', () => {
+            const progressEl = document.getElementById('progressBar2');
+            if (progressEl) progressEl.style.stroke = '#ff9500';
+            // Also update the display to reflect any potential time text reset
+            view2.updateDisplay();
+        });
 
         // Event listeners for View 3
         view3.startBtn.addEventListener('click', () => view3.start());
         view3.pauseBtn.addEventListener('click', () => view3.pause());
         view3.resetBtn.addEventListener('click', () => view3.reset());
 
+        // Event listeners for View 4
+        document.getElementById('startBtn4').addEventListener('click', () => view4.start());
+        document.getElementById('pauseBtn4').addEventListener('click', () => view4.pause());
+        document.getElementById('resetBtn4').addEventListener('click', () => view4.reset());
+
         // Handle page visibility changes to re-request wake lock if needed
         document.addEventListener('visibilitychange', async () => {
-            for (let view = 1; view <= 3; view++) {
+            for (let view = 1; view <= 4; view++) {
                 if (viewState[view].timer && document.visibilityState === 'visible') {
                     await requestWakeLock(view);
                 }

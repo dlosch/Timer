@@ -51,6 +51,14 @@ This is a static HTML application. To deploy:
 - **PWA Manifest**: Enables installation on iOS and Android
 - **Responsive Design**: Adapts to different screen sizes
 
+### Analog Stopwatch notes
+
+- The analog stopwatch includes a main seconds dial and a smaller nested minutes subdial (0–30).
+- SVG hand rotation uses CSS transforms. To ensure the hands rotate around the intended centers, we set:
+   - `.hand-second { transform-box: view-box; transform-origin: 50% 50%; }` (center of main dial)
+   - `.hand-minute { transform-box: view-box; transform-origin: 100px 70px; }` (center of subdial)
+- Without these settings, some browsers interpret `transform-origin` relative to the element’s bounding box, causing the minute hand to drift from the subdial center.
+
 ## Browser Support
 
 - ✅ Safari (iOS/macOS)
