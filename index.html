@@ -549,7 +549,7 @@
 
         /* Tilt the circular progress (SVG) by half the tilt angle */
         .angled-pane .circular-progress {
-            transform: perspective(900px) rotateX(calc(var(--tilt-angle) / 2));
+            transform: rotate(-90deg) perspective(900px) rotateX(calc(var(--tilt-angle) / 2));
             transform-origin: center;
             transition: transform 0.1s ease-out;
         }
@@ -686,64 +686,6 @@
             font-size: clamp(16px, 4.5vw, 20px);
         }
 
-        /* Tilt angle slider control */
-        .tilt-slider-container {
-            position: absolute;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 10;
-            opacity: 1;
-            transition: opacity 0.3s ease;
-        }
-
-        .tilt-slider-container.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .tilt-slider {
-            -webkit-appearance: none;
-            appearance: none;
-            writing-mode: vertical-lr;
-            direction: rtl;
-            width: 8px;
-            height: 180px;
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 10px;
-            outline: none;
-            backdrop-filter: blur(10px);
-        }
-
-        .tilt-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: #ff9500;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(255, 149, 0, 0.5);
-        }
-
-        .tilt-slider::-moz-range-thumb {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: #ff9500;
-            cursor: pointer;
-            border: none;
-            box-shadow: 0 2px 8px rgba(255, 149, 0, 0.5);
-        }
-
-        .tilt-slider::-webkit-slider-thumb:active {
-            background: #ffaa33;
-        }
-
-        .tilt-slider::-moz-range-thumb:active {
-            background: #ffaa33;
-        }
-
         @media (max-width: 400px) {
             .angled-pane .timer-display {
                 width: var(--dial-size);
@@ -761,18 +703,6 @@
         <div class="views-container" id="viewsContainer">
             <!-- View 5: Predefined Timers (45° optimized) -->
             <div class="view angled-pane" id="view5">
-                <!-- Tilt angle slider (hidden when timer is running) -->
-                <div class="tilt-slider-container" id="tiltSliderContainer5">
-                    <input type="range" 
-                           class="tilt-slider" 
-                           id="tiltSlider5" 
-                           min="-60" 
-                           max="-15" 
-                           value="-42" 
-                           step="1"
-                           aria-label="Adjust tilt angle">
-                </div>
-                
                 <div class="container">
                     <div class="timer-display">
                         <svg class="circular-progress" viewBox="0 0 280 280">
@@ -1216,8 +1146,6 @@
                 this.presetSelect.classList.add('dimmed');
                 this.pauseBtn.classList.add('dimmed');
                 this.resetBtn.classList.add('dimmed');
-                // Hide tilt slider when timer is running
-                tiltControl.hide();
 
                 const loop = () => {
                     const now = performance.now();
@@ -1289,8 +1217,6 @@
                 this.presetSelect.classList.remove('dimmed');
                 this.pauseBtn.classList.remove('dimmed');
                 this.resetBtn.classList.remove('dimmed');
-                // Show tilt slider when timer is paused
-                tiltControl.show();
             },
 
             stop() {
@@ -1304,8 +1230,6 @@
                 this.presetSelect.classList.remove('dimmed');
                 this.pauseBtn.classList.remove('dimmed');
                 this.resetBtn.classList.remove('dimmed');
-                // Show tilt slider when timer is stopped
-                tiltControl.show();
             },
 
             reset() {
@@ -1335,8 +1259,6 @@
 
         // ==================== TILT ANGLE CONTROL FOR VIEW 5 ====================
         const tiltControl = {
-            slider: null,
-            sliderContainer: null,
             view5Element: null,
             currentAngle: -42, // default angle in degrees
             currentFontSize: 96, // default font size in pixels
@@ -1344,19 +1266,17 @@
             gestureStartAngle: 0,
             isGesturing: false,
             isPinching: false,
+            isTilting: false,
             initialPinchDistance: 0,
             gestureStartFontSize: 0,
 
             init() {
-                this.slider = document.getElementById('tiltSlider5');
-                this.sliderContainer = document.getElementById('tiltSliderContainer5');
                 this.view5Element = document.getElementById('view5');
                 
                 // Load saved angle from localStorage
                 const savedAngle = localStorage.getItem('tiltAngle5');
                 if (savedAngle !== null) {
                     this.currentAngle = parseFloat(savedAngle);
-                    this.slider.value = this.currentAngle;
                 }
                 
                 // Load saved font size from localStorage
@@ -1367,13 +1287,6 @@
                 
                 this.applyAngle(this.currentAngle);
                 this.applyFontSize(this.currentFontSize);
-                
-                // Slider event handler
-                this.slider.addEventListener('input', (e) => {
-                    this.currentAngle = parseFloat(e.target.value);
-                    this.applyAngle(this.currentAngle);
-                    this.saveAngle();
-                });
 
                 // Two-finger gesture handlers (for both tilt and pinch)
                 this.view5Element.addEventListener('touchstart', (e) => this.handleTouchStart(e), { passive: false });
@@ -1402,6 +1315,8 @@
                     this.gestureStartFontSize = this.currentFontSize;
                     
                     this.isGesturing = true;
+                    this.isPinching = false;
+                    this.isTilting = false;
                 }
             },
 
@@ -1420,11 +1335,20 @@
                 const currentDistance = Math.sqrt(dx * dx + dy * dy);
                 const distanceChange = currentDistance - this.initialPinchDistance;
                 
-                // Determine if this is primarily a pinch or a tilt gesture
-                // If distance changed significantly, treat as pinch
-                if (Math.abs(distanceChange) > 20) {
-                    this.isPinching = true;
-                    
+                // Calculate vertical movement for tilt detection
+                const avgY = (touch1.clientY + touch2.clientY) / 2;
+                const deltaY = Math.abs(avgY - this.gestureStartY);
+                
+                // Determine gesture type on first significant movement
+                if (!this.isPinching && !this.isTilting) {
+                    if (Math.abs(distanceChange) > 10) {
+                        this.isPinching = true;
+                    } else if (deltaY > 10) {
+                        this.isTilting = true;
+                    }
+                }
+                
+                if (this.isPinching) {
                     // Map distance change to font size change
                     // Every 50 pixels of pinch = 20px font size change
                     const fontSizeDelta = distanceChange / 2.5;
@@ -1435,21 +1359,20 @@
                     
                     this.currentFontSize = newFontSize;
                     this.applyFontSize(newFontSize);
-                } else {
+                } else if (this.isTilting) {
                     // Treat as tilt gesture (vertical drag)
-                    const avgY = (touch1.clientY + touch2.clientY) / 2;
-                    const deltaY = avgY - this.gestureStartY;
+                    const avgYSigned = (touch1.clientY + touch2.clientY) / 2;
+                    const deltaYSigned = avgYSigned - this.gestureStartY;
                     
                     // Map vertical movement to angle change (negative deltaY = more tilt)
                     // Sensitivity: 3 pixels = 1 degree
-                    const angleDelta = -deltaY / 3;
+                    const angleDelta = -deltaYSigned / 3;
                     let newAngle = this.gestureStartAngle + angleDelta;
                     
                     // Clamp angle between -60 and -15 degrees
                     newAngle = Math.max(-60, Math.min(-15, newAngle));
                     
                     this.currentAngle = newAngle;
-                    this.slider.value = newAngle;
                     this.applyAngle(newAngle);
                 }
             },
@@ -1462,6 +1385,10 @@
                     if (this.isPinching) {
                         this.saveFontSize();
                         this.isPinching = false;
+                    }
+                    
+                    if (this.isTilting) {
+                        this.isTilting = false;
                     }
                 }
             },
@@ -1480,18 +1407,6 @@
             
             saveFontSize() {
                 localStorage.setItem('fontSize5', this.currentFontSize.toString());
-            },
-
-            show() {
-                if (this.sliderContainer) {
-                    this.sliderContainer.classList.remove('hidden');
-                }
-            },
-
-            hide() {
-                if (this.sliderContainer) {
-                    this.sliderContainer.classList.add('hidden');
-                }
             }
         };
 
