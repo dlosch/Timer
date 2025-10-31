@@ -412,6 +412,7 @@
             width: 100%;
             height: 100%;
             display: block;
+            touch-action: pan-y; /* Allow vertical panning but not horizontal, enabling swipe navigation */
         }
 
         .dial-bg {
@@ -521,6 +522,8 @@
         .angled-pane {
             /* Clamp dial size so it never clips smaller viewports while still filling larger screens */
             --dial-size: clamp(220px, min(78vw, 60dvh), 340px);
+            --tilt-angle: -42deg; /* Default tilt angle, adjustable via gesture or slider */
+            --digit-font-size: 96px; /* Default font size, adjustable via pinch zoom */
         }
         .angled-pane .container {
             max-width: 620px;
@@ -542,6 +545,14 @@
             /* transform: translateY(2%) perspective(900px) rotateX(-25deg) scaleY(1.28); */
             /* transform: translateY(2%) perspective(900px) rotateX(-35deg) scaleY(1.28); */
             transform-origin: center;
+        }
+
+        /* Tilt the circular progress (SVG) by half the tilt angle */
+        .angled-pane .circular-progress {
+            /* Circle stays flat - only rotates to start at 12 o'clock, no 3D tilt */
+            transform: rotate(-90deg);
+            transform-origin: center;
+            transition: transform 0.1s ease-out;
         }
 
         /* 3D transform test view styles (used by view1-3d) */
@@ -612,7 +623,7 @@
 
         .angled-pane .time-text {
             /* font-size: clamp(96px, 22vw, 180px); */
-            font-size: 96px;
+            font-size: var(--digit-font-size);
             font-weight: 700;
             font-family: 'SF Pro Rounded', 'Avenir Next Condensed', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif;
             letter-spacing: -1px;
@@ -626,9 +637,10 @@
                 0 8px 14px rgba(0,0,0,0.55);
             /* transform: translateY(-2%) rotateX(-16deg) scaleY(1.62); */
             /* transform:  translateY(45%) perspective(900px) rotateX(-22deg)  scaleY(2.12) scaleX(1.0); */
-            transform:  translateY(45%) perspective(900px) rotateX(-42deg)  scaleY(2.12) scaleX(1.0);
+            transform:  translateY(45%) perspective(900px) rotateX(var(--tilt-angle))  scaleY(2.12) scaleX(1.0);
             /* transform:  translateY(45%) scaleY(2.12); */
             transform-origin: center bottom;
+            transition: transform 0.1s ease-out, font-size 0.1s ease-out;
         }
 
         /* Dim styling for controls while running (still clickable) */
@@ -1243,6 +1255,141 @@
                 this.presetSelect.classList.remove('dimmed');
                 this.pauseBtn.classList.remove('dimmed');
                 this.resetBtn.classList.remove('dimmed');
+            }
+        };
+
+        // ==================== TILT ANGLE CONTROL FOR VIEW 5 ====================
+        const tiltControl = {
+            view5Element: null,
+            currentAngle: -42, // default angle in degrees
+            currentFontSize: 96, // default font size in pixels
+            gestureStartY: 0,
+            gestureStartAngle: 0,
+            isGesturing: false,
+            initialPinchDistance: 0,
+            gestureStartFontSize: 0,
+
+            init() {
+                this.view5Element = document.getElementById('view5');
+                
+                // Load saved angle from localStorage
+                const savedAngle = localStorage.getItem('tiltAngle5');
+                if (savedAngle !== null) {
+                    this.currentAngle = parseFloat(savedAngle);
+                }
+                
+                // Load saved font size from localStorage
+                const savedFontSize = localStorage.getItem('fontSize5');
+                if (savedFontSize !== null) {
+                    this.currentFontSize = parseFloat(savedFontSize);
+                }
+                
+                this.applyAngle(this.currentAngle);
+                this.applyFontSize(this.currentFontSize);
+
+                // Two-finger gesture handlers (for both tilt and pinch)
+                this.view5Element.addEventListener('touchstart', (e) => this.handleTouchStart(e), { passive: false });
+                this.view5Element.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: false });
+                this.view5Element.addEventListener('touchend', (e) => this.handleTouchEnd(e), { passive: false });
+            },
+
+            handleTouchStart(e) {
+                // Only handle gestures when timer is not running
+                if (viewState[5].timer !== null) return;
+                
+                if (e.touches.length === 2) {
+                    e.preventDefault();
+                    
+                    // Calculate initial distance between two fingers for pinch detection
+                    const touch1 = e.touches[0];
+                    const touch2 = e.touches[1];
+                    const dx = touch2.clientX - touch1.clientX;
+                    const dy = touch2.clientY - touch1.clientY;
+                    this.initialPinchDistance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Store initial values for both gestures
+                    const avgY = (touch1.clientY + touch2.clientY) / 2;
+                    this.gestureStartY = avgY;
+                    this.gestureStartAngle = this.currentAngle;
+                    this.gestureStartFontSize = this.currentFontSize;
+                    
+                    this.isGesturing = true;
+                }
+            },
+
+            handleTouchMove(e) {
+                if (!this.isGesturing || e.touches.length !== 2) return;
+                if (viewState[5].timer !== null) return;
+                
+                e.preventDefault();
+                
+                const touch1 = e.touches[0];
+                const touch2 = e.touches[1];
+                
+                // Calculate current distance for pinch detection
+                const dx = touch2.clientX - touch1.clientX;
+                const dy = touch2.clientY - touch1.clientY;
+                const currentDistance = Math.sqrt(dx * dx + dy * dy);
+                const distanceChange = currentDistance - this.initialPinchDistance;
+                
+                // Calculate vertical movement for tilt detection
+                const avgY = (touch1.clientY + touch2.clientY) / 2;
+                const deltaYSigned = avgY - this.gestureStartY;
+                
+                // Apply BOTH gestures simultaneously if they have significant movement
+                
+                // Handle pinch zoom (if distance changed significantly)
+                if (Math.abs(distanceChange) > 5) {
+                    // Map distance change to font size change
+                    // Every 50 pixels of pinch = 20px font size change
+                    const fontSizeDelta = distanceChange / 2.5;
+                    let newFontSize = this.gestureStartFontSize + fontSizeDelta;
+                    
+                    // Clamp font size between 60px and 160px
+                    newFontSize = Math.max(60, Math.min(160, newFontSize));
+                    
+                    this.currentFontSize = newFontSize;
+                    this.applyFontSize(newFontSize);
+                }
+                
+                // Handle tilt gesture (if vertical movement is significant)
+                if (Math.abs(deltaYSigned) > 5) {
+                    // Map vertical movement to angle change (negative deltaY = more tilt)
+                    // Sensitivity: 3 pixels = 1 degree
+                    const angleDelta = -deltaYSigned / 3;
+                    let newAngle = this.gestureStartAngle + angleDelta;
+                    
+                    // Clamp angle between -60 and -15 degrees
+                    newAngle = Math.max(-60, Math.min(-15, newAngle));
+                    
+                    this.currentAngle = newAngle;
+                    this.applyAngle(newAngle);
+                }
+            },
+
+            handleTouchEnd(e) {
+                if (this.isGesturing && e.touches.length < 2) {
+                    this.isGesturing = false;
+                    // Save both angle and font size since both can change in same gesture
+                    this.saveAngle();
+                    this.saveFontSize();
+                }
+            },
+
+            applyAngle(angle) {
+                this.view5Element.style.setProperty('--tilt-angle', `${angle}deg`);
+            },
+            
+            applyFontSize(fontSize) {
+                this.view5Element.style.setProperty('--digit-font-size', `${fontSize}px`);
+            },
+
+            saveAngle() {
+                localStorage.setItem('tiltAngle5', this.currentAngle.toString());
+            },
+            
+            saveFontSize() {
+                localStorage.setItem('fontSize5', this.currentFontSize.toString());
             }
         };
 
@@ -2155,6 +2302,9 @@
         view4.init();
         view5.buildPerspectiveTicks();
         view5.updateDisplay();
+        
+        // Initialize tilt control for view 5
+        tiltControl.init();
 
         // Event listeners for View 1
         view1.startBtn.addEventListener('click', () => view1.start());
