@@ -549,7 +549,8 @@
 
         /* Tilt the circular progress (SVG) by half the tilt angle */
         .angled-pane .circular-progress {
-            transform: rotate(-90deg) perspective(900px) rotateX(calc(var(--tilt-angle) / 2));
+            /* Circle stays flat - only rotates to start at 12 o'clock, no 3D tilt */
+            transform: rotate(-90deg);
             transform-origin: center;
             transition: transform 0.1s ease-out;
         }
@@ -1265,8 +1266,6 @@
             gestureStartY: 0,
             gestureStartAngle: 0,
             isGesturing: false,
-            isPinching: false,
-            isTilting: false,
             initialPinchDistance: 0,
             gestureStartFontSize: 0,
 
@@ -1315,8 +1314,6 @@
                     this.gestureStartFontSize = this.currentFontSize;
                     
                     this.isGesturing = true;
-                    this.isPinching = false;
-                    this.isTilting = false;
                 }
             },
 
@@ -1337,18 +1334,12 @@
                 
                 // Calculate vertical movement for tilt detection
                 const avgY = (touch1.clientY + touch2.clientY) / 2;
-                const deltaY = Math.abs(avgY - this.gestureStartY);
+                const deltaYSigned = avgY - this.gestureStartY;
                 
-                // Determine gesture type on first significant movement
-                if (!this.isPinching && !this.isTilting) {
-                    if (Math.abs(distanceChange) > 10) {
-                        this.isPinching = true;
-                    } else if (deltaY > 10) {
-                        this.isTilting = true;
-                    }
-                }
+                // Apply BOTH gestures simultaneously if they have significant movement
                 
-                if (this.isPinching) {
+                // Handle pinch zoom (if distance changed significantly)
+                if (Math.abs(distanceChange) > 5) {
                     // Map distance change to font size change
                     // Every 50 pixels of pinch = 20px font size change
                     const fontSizeDelta = distanceChange / 2.5;
@@ -1359,11 +1350,10 @@
                     
                     this.currentFontSize = newFontSize;
                     this.applyFontSize(newFontSize);
-                } else if (this.isTilting) {
-                    // Treat as tilt gesture (vertical drag)
-                    const avgYSigned = (touch1.clientY + touch2.clientY) / 2;
-                    const deltaYSigned = avgYSigned - this.gestureStartY;
-                    
+                }
+                
+                // Handle tilt gesture (if vertical movement is significant)
+                if (Math.abs(deltaYSigned) > 5) {
                     // Map vertical movement to angle change (negative deltaY = more tilt)
                     // Sensitivity: 3 pixels = 1 degree
                     const angleDelta = -deltaYSigned / 3;
@@ -1380,16 +1370,9 @@
             handleTouchEnd(e) {
                 if (this.isGesturing && e.touches.length < 2) {
                     this.isGesturing = false;
+                    // Save both angle and font size since both can change in same gesture
                     this.saveAngle();
-                    
-                    if (this.isPinching) {
-                        this.saveFontSize();
-                        this.isPinching = false;
-                    }
-                    
-                    if (this.isTilting) {
-                        this.isTilting = false;
-                    }
+                    this.saveFontSize();
                 }
             },
 
