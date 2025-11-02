@@ -720,7 +720,7 @@
                     <div class="preset-selector">
                         <select id="presetSelect5">
                             <option value="420">OPD - 7min</option>
-                            <option value="180">OPD - 3min</option>
+                            <option value="210">OPD - 3min 30sec</option>
                             <option value="60">OPD - 1min</option>
                         </select>
                     </div>
@@ -734,7 +734,7 @@
             </div>
 
             <!-- View 1.5: 3D Transform Test (inserted after View 1) -->
-            <div class="view" id="view1-3d">
+            <div class="view" id="view1-3d" style="visibility: hidden;">
                 <div class="container">
                     <div class="view-title">3D Transform Test</div>
                     <div class="test-3d-grid">
@@ -766,7 +766,7 @@
             </div>
 
             <!-- View 1: Custom Timer (existing) -->
-            <div class="view" id="view1">
+            <div class="view" id="view1" style="visibility: hidden;">
                 <div class="container">
                     <div class="timer-display">
                         <svg class="circular-progress" viewBox="0 0 280 280">
@@ -805,7 +805,7 @@
             </div>
 
             <!-- View 2: Predefined Timers -->
-            <div class="view" id="view2">
+            <div class="view" id="view2" style="visibility: hidden;">
                 <div class="container">
                     <div class="timer-display">
                         <svg class="circular-progress" viewBox="0 0 280 280">
@@ -820,7 +820,7 @@
                     <div class="preset-selector">
                         <select id="presetSelect">
                             <option value="420">OPD - 7min</option>
-                            <option value="180">OPD - 3min</option>
+                            <option value="210">OPD - 3min 30sec</option>
                             <option value="60">OPD - 1min</option>
                         </select>
                     </div>
@@ -834,7 +834,7 @@
             </div>
 
             <!-- View 3: Interval Timer -->
-            <div class="view" id="view3">
+            <div class="view" id="view3" style="visibility: hidden;">
                 <div class="container">
                     <div class="timer-display">
                         <svg class="circular-progress" viewBox="0 0 280 280">
@@ -865,7 +865,7 @@
                 </div>
             </div>
             <!-- View 4: Analog Stopwatch -->
-            <div class="view" id="view4">
+            <div class="view" id="view4" style="visibility: hidden;">
                 <div class="container">
                     <div class="analog-container">
                         <svg id="analogSvg" class="analog-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="Analog Stopwatch">
@@ -1286,6 +1286,18 @@
                 
                 this.applyAngle(this.currentAngle);
                 this.applyFontSize(this.currentFontSize);
+
+                // Load saved preset from localStorage
+                const savedPreset = localStorage.getItem('preset5');
+                if (savedPreset !== null) {
+                    view5.presetSelect.value = savedPreset;
+                    viewState[5].presetSeconds = parseInt(savedPreset);
+                }
+
+                // Save preset when changed
+                view5.presetSelect.addEventListener('change', () => {
+                    localStorage.setItem('preset5', view5.presetSelect.value);
+                });
 
                 // Two-finger gesture handlers (for both tilt and pinch)
                 this.view5Element.addEventListener('touchstart', (e) => this.handleTouchStart(e), { passive: false });
@@ -1868,7 +1880,7 @@
                     viewState[2].timer = requestAnimationFrame(loop);
                 };
                 viewState[2].timer = requestAnimationFrame(loop);
-            },
+                       },
 
             pause() {
                 cancelAnimationFrame(viewState[2].timer);
