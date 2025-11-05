@@ -687,6 +687,22 @@
     </style>
 </head>
 <body>
+    <!-- Auth overlay: will block the app until the user authenticates via WebAuthn (Face ID on iOS) -->
+    <div id="authOverlay" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(0,0,0,0.85),rgba(0,0,0,0.6));color:#fff;">
+        <div style="width:92%;max-width:420px;padding:20px;border-radius:12px;background:linear-gradient(180deg,#111,#222);box-shadow:0 8px 30px rgba(0,0,0,0.6);text-align:center;">
+            <h2 style="margin-bottom:8px;font-weight:600">Unlock Timer</h2>
+            <p id="authMsg" style="color:rgba(255,255,255,0.85);margin-bottom:12px;font-size:14px;">Use Face ID (iOS) or platform biometrics to unlock the app.</p>
+            <div style="display:flex;gap:8px;justify-content:center;margin-bottom:12px;">
+                <button id="webauthnRegisterBtn" style="padding:10px 14px;border-radius:10px;border:none;background:#ff9500;color:#111;font-weight:600;">Register</button>
+                <button id="webauthnLoginBtn" style="padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:#fff;">Login</button>
+            </div>
+            <div style="margin-bottom:8px;">
+                <label style="font-size:13px;opacity:0.9;display:block;margin-bottom:6px;">Persist encrypted key (optional)</label>
+                <input id="persistPin" type="password" placeholder="Choose a short PIN to persist key" style="width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#fff;" />
+            </div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.7);margin-top:8px;">Note: Face ID is used to authenticate (unlock). Encrypted data at rest is protected with a local AES key; to persist that key between sessions you may supply an optional PIN which will be used to encrypt the AES key. Without a PIN the AES key stays in-memory for the session only.</div>
+        </div>
+    </div>
     <div class="views-wrapper">
         <!-- Desktop navigation for view switching removed as requested -->
         <div class="views-container" id="viewsContainer">
@@ -892,6 +908,8 @@
     </div>
 
     <script src="nosleep.min.js"></script>
+    <script src="crypto.js"></script>
+    <script src="auth.js"></script>
     <script>
         // Global state
         let noSleep = new NoSleep();
@@ -2236,6 +2254,48 @@
                     });
             });
         }
+
+        // ========== Optional: restore/persist encrypted app settings after auth ==========
+        (function waitForAuthAndRestore(){
+            const check = async () => {
+                if (window.AppIsAuthenticated) {
+                    try {
+                        const key = await window.getAppKey();
+                        if (!key) return;
+                        const settings = await window.SecureCrypto.getEncryptedItem('app_settings', key);
+                        if (settings && settings.presetSelect) {
+                            // apply preset values for view2/view5 if present
+                            const el2 = document.getElementById('presetSelect');
+                            const el5 = document.getElementById('presetSelect5');
+                            if (el2 && settings.presetSelect.view2) el2.value = settings.presetSelect.view2;
+                            if (el5 && settings.presetSelect.view5) el5.value = settings.presetSelect.view5;
+                            // update displays
+                            view2.updateDisplay();
+                            view5.updateDisplay();
+                        }
+                    } catch (err) {
+                        console.warn('restore settings failed', err);
+                    }
+                } else {
+                    setTimeout(check, 250);
+                }
+            };
+            check();
+        })();
+
+        // Save presets when changed (persist encrypted if authenticated)
+        document.getElementById('presetSelect')?.addEventListener('change', async () => {
+            try {
+                if (!window.AppIsAuthenticated) return;
+                const key = await window.getAppKey();
+                if (!key) return;
+                const el2 = document.getElementById('presetSelect');
+                const el5 = document.getElementById('presetSelect5');
+                const settings = { presetSelect: { view2: el2?.value, view5: el5?.value } };
+                await window.SecureCrypto.setEncryptedItem('app_settings', settings, key);
+            } catch (err) { console.warn('save settings failed', err); }
+        });
+
     </script>
 </body>
 </html>
