@@ -55,7 +55,7 @@ self.addEventListener('fetch', event => {
       })
   );
 });
-
+// v20251106
 // Activate and clean up old caches
 self.addEventListener('activate', event => {
   // Take control immediately
