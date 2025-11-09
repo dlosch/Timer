@@ -1,5 +1,6 @@
 [
-  { "file": "Argumente-Gemini25pro.md", "title": "Argumente Gemini 25 Pro" },
-  { "file": "OPD-Gemini25pro.md", "title": "OPD Gemini 25 Pro" },
-  { "file": "training.md", "title": "Training" }
+  { "file": "Argumente-Gemini25pro.md", "title": "Argumente" },
+  { "file": "OPD-Gemini25pro.md", "title": "OPD" },
+  { "file": "Rhetorik-Gemini25pro.md", "title": "Rhetorik 1" },
+  { "file": "Rhetorik-Checkliste-Gemini25pro.md", "title": "Rhetorik 2" }
 ]
