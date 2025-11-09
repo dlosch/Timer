@@ -791,6 +791,7 @@
     <script src="nosleep.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+    <script src="marked.js"></script>
     <script>
         // Global state
         let noSleep = new NoSleep();
@@ -1873,6 +1874,7 @@
                 } else if (viewState[3].currentPhase === 'on') {
                     updateProgress('progressBar3', viewState[3].remainingSeconds, viewState[3].onDuration);
                     this.intervalStatus.textContent = 'ON - ' + formatTime(viewState[3].remainingSeconds);
+
                     this.intervalStatus.style.background = 'rgba(255, 149, 0, 0.3)';
                 } else {
                     updateProgress('progressBar3', viewState[3].remainingSeconds, viewState[3].offDuration);

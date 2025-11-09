@@ -5,7 +5,8 @@ const urlsToCache = [
   './nosleep.min.js',
   './icon-192.png',
   './icon-512.png',
-  './icon.png'
+  './icon.png',
+  '/marked.js' // Add marked.js to the cache
 ];
 
 // Install Service Worker
