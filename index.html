@@ -1012,18 +1012,11 @@
                         const elapsed = now - viewState[5].overtimeStartMs;
                         viewState[5].overtimeElapsedMs = elapsed;
                         viewState[5].overtimeSeconds = Math.floor(elapsed / 1000);
-                            // Update linear bar fill for full countdown
-                            if (this.linearFill) {
-                                if (viewState[5].totalSeconds > 0) {
-                                    const pct = 1 - (viewState[5].remainingSeconds / viewState[5].totalSeconds);
-                                    this.linearFill.style.width = `${Math.max(0, Math.min(1, pct)) * 100}%`;
-                                    this.linearFill.style.background = progressEl.style.stroke || '#ff9500';
-                                    this.linearFill.style.boxShadow = `0 2px 8px ${(progressEl.style.stroke || '#ff9500').replace(')', ',0.35)').replace('rgb', 'rgba')}`;
-                                } else {
-                                    this.linearFill.style.width = '0%';
-                                    this.linearFill.style.background = '#ff9500';
-                                }
-                            }
+                        // If a linear fill exists, simply keep it full and red while in overtime
+                        if (this.linearFill) {
+                            this.linearFill.style.width = '100%';
+                            this.linearFill.style.background = '#ff3b30';
+                        }
                     }
                     this.updateDisplay();
                     viewState[5].timer = requestAnimationFrame(loop);
@@ -2154,50 +2147,63 @@
         };
 
         // ==================== INITIALIZATION ====================
-        // Initialize views
-        view1.initializePickers();
-        view1.updateDisplay();
-        view2.updateDisplay();
-        view3.init();
-        view4.init();
+        // Initialize only views that exist in DOM to avoid null errors
+        // View 1
+        if (view1.minutesPicker && view1.secondsPicker && view1.timeDisplay) {
+            view1.initializePickers();
+            view1.updateDisplay();
+            if (view1.startBtn) view1.startBtn.addEventListener('click', () => view1.start());
+            if (view1.pauseBtn) view1.pauseBtn.addEventListener('click', () => view1.pause());
+            if (view1.resetBtn) view1.resetBtn.addEventListener('click', () => view1.reset());
+        }
+
+        // View 2
+        if (view2.timeDisplay) {
+            view2.updateDisplay();
+            if (view2.startBtn) view2.startBtn.addEventListener('click', () => view2.start());
+            if (view2.pauseBtn) view2.pauseBtn.addEventListener('click', () => view2.pause());
+            if (view2.resetBtn) view2.resetBtn.addEventListener('click', () => view2.reset());
+            if (view2.presetSelect) {
+                view2.presetSelect.addEventListener('change', () => {
+                    const progressEl = document.getElementById('progressBar2');
+                    if (progressEl) progressEl.style.stroke = '#ff9500';
+                    view2.updateDisplay();
+                });
+            }
+        }
+
+        // View 3
+        if (view3.timeDisplay) {
+            view3.init();
+            if (view3.startBtn) view3.startBtn.addEventListener('click', () => view3.start());
+            if (view3.pauseBtn) view3.pauseBtn.addEventListener('click', () => view3.pause());
+            if (view3.resetBtn) view3.resetBtn.addEventListener('click', () => view3.reset());
+        }
+
+        // View 4
+        const startBtn4 = document.getElementById('startBtn4');
+        const pauseBtn4 = document.getElementById('pauseBtn4');
+        const resetBtn4 = document.getElementById('resetBtn4');
+        if (startBtn4 || pauseBtn4 || resetBtn4) {
+            view4.init();
+            if (startBtn4) startBtn4.addEventListener('click', () => view4.start());
+            if (pauseBtn4) pauseBtn4.addEventListener('click', () => view4.pause());
+            if (resetBtn4) resetBtn4.addEventListener('click', () => view4.reset());
+        }
+
+        // View 5
         view5.buildPerspectiveTicks();
         view5.updateDisplay();
-        
         // Initialize tilt control for view 5
         tiltControl.init();
-
-        // Event listeners for View 1
-        view1.startBtn.addEventListener('click', () => view1.start());
-        view1.pauseBtn.addEventListener('click', () => view1.pause());
-        view1.resetBtn.addEventListener('click', () => view1.reset());
-
-        // Event listeners for View 2
-        view2.startBtn.addEventListener('click', () => view2.start());
-        view2.pauseBtn.addEventListener('click', () => view2.pause());
-        view2.resetBtn.addEventListener('click', () => view2.reset());
-        // Ensure color resets appropriately when changing presets
-        view2.presetSelect.addEventListener('change', () => {
-            const progressEl = document.getElementById('progressBar2');
-            if (progressEl) progressEl.style.stroke = '#ff9500';
-            // Also update the display to reflect any potential time text reset
-            view2.updateDisplay();
-        });
-
-        // Event listeners for View 3
-        view3.startBtn.addEventListener('click', () => view3.start());
-        view3.pauseBtn.addEventListener('click', () => view3.pause());
-        view3.resetBtn.addEventListener('click', () => view3.reset());
-
-        // Event listeners for View 4
-        document.getElementById('startBtn4').addEventListener('click', () => view4.start());
-        document.getElementById('pauseBtn4').addEventListener('click', () => view4.pause());
-        document.getElementById('resetBtn4').addEventListener('click', () => view4.reset());
-
-        // Event listeners for View 5
-        document.getElementById('startBtn5').addEventListener('click', () => view5.start());
-        document.getElementById('pauseBtn5').addEventListener('click', () => view5.pause());
-        document.getElementById('resetBtn5').addEventListener('click', () => view5.reset());
-        document.getElementById('presetSelect5').addEventListener('change', () => {
+        const startBtn5 = document.getElementById('startBtn5');
+        const pauseBtn5 = document.getElementById('pauseBtn5');
+        const resetBtn5 = document.getElementById('resetBtn5');
+        const presetSelect5 = document.getElementById('presetSelect5');
+        if (startBtn5) startBtn5.addEventListener('click', () => view5.start());
+        if (pauseBtn5) pauseBtn5.addEventListener('click', () => view5.pause());
+        if (resetBtn5) resetBtn5.addEventListener('click', () => view5.reset());
+        if (presetSelect5) presetSelect5.addEventListener('change', () => {
             const progressEl = document.getElementById('progressBar5');
             if (progressEl) progressEl.style.stroke = '#ff9500';
             view5.updateDisplay();
@@ -2235,6 +2241,14 @@
         document.addEventListener('click', resumeAudioContext, { once: true });
 
         // ==================== DOCS VIEW LOADER ====================
+        function renderMarkdown(md) {
+            try {
+                return marked.parse(md);
+            } catch (e) {
+                console.error('Markdown render error:', e);
+                return `<pre>${md.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</pre>`;
+            }
+        }
         const docsData = {
             "Argumente-Gemini25pro.md": `Das ist die Kernkompetenz. Sie haben die "Überschriften" (die Argumente), jetzt brauchen Sie den "Artikel" dazu.
 
@@ -2473,48 +2487,56 @@ Zungenbrecher Blaukraut bleibt Blaukraut`
                 { "file": "training.md", "title": "Training" }
             ];
         }
-
-        // Hardcoded docs loading
-        const docsTabList = document.getElementById('docsTabList');
-        const docsContent = document.getElementById('docsContent');
-        if (!docsTabList || !docsContent) return;
-
-        const index = await loadDocsIndex();
-        if (!index || !index.length) {
-            docsContent.innerHTML = '<p>No docs found.</p>';
-            return;
-        }
-
-        let activeBtn = null;
-
-        async function openDoc(entry, btn) {
-            if (activeBtn) activeBtn.classList.remove('active');
-            btn.classList.add('active'); activeBtn = btn;
-            docsContent.innerHTML = '<p>Loading...</p>';
-            try {
-                const md = docsData[entry.file];
-                if (!md) throw new Error('Doc not found');
-                docsContent.innerHTML = renderMarkdown(md);
-            } catch (err) {
-                docsContent.innerHTML = `
-                    <p>Fehler beim Laden: ${err.message}</p>
-                `;
+        async function initDocsView() {
+            // Hardcoded docs loading
+            const docsTabList = document.getElementById('docsTabList');
+            const docsContent = document.getElementById('docsContent');
+            if (!docsTabList || !docsContent) {
+                return;
             }
+
+            const index = await loadDocsIndex();
+            if (!index || !index.length) {
+                docsContent.innerHTML = '<p>No docs found.</p>';
+                return;
+            }
+
+            let activeBtn = null;
+
+            function openDoc(entry, btn) {
+                if (activeBtn) activeBtn.classList.remove('active');
+                btn.classList.add('active'); activeBtn = btn;
+                docsContent.innerHTML = '<p>Loading...</p>';
+                try {
+                    const md = docsData[entry.file];
+                    if (!md) throw new Error('Doc not found');
+                    docsContent.innerHTML = renderMarkdown(md);
+                } catch (err) {
+                    docsContent.innerHTML = `<p>Fehler beim Laden: ${err.message}</p>`;
+                }
+            }
+
+            // Build tab buttons
+            for (const entry of index) {
+                const btn = document.createElement('button');
+                btn.className = 'docs-tab';
+                btn.textContent = entry.title || entry.file;
+                btn.addEventListener('click', () => openDoc(entry, btn));
+                docsTabList.appendChild(btn);
+            }
+
+            // Open first doc
+            const first = index[0];
+            const firstBtn = docsTabList.querySelector('button.docs-tab');
+            if (first && firstBtn) openDoc(first, firstBtn);
         }
 
-        // Build tab buttons
-        for (const entry of index) {
-            const btn = document.createElement('button');
-            btn.className = 'docs-tab';
-            btn.textContent = entry.title || entry.file;
-            btn.addEventListener('click', () => openDoc(entry, btn));
-            docsTabList.appendChild(btn);
-        }
+        // Kick off docs init
+        initDocsView();
 
-        // Open first doc
-        const first = index[0];
-        const firstBtn = docsTabList.querySelector('button.docs-tab');
-        if (first && firstBtn) openDoc(first, firstBtn);
+        // Create page indicators and set initial view transform
+        createPageIndicators();
+        updateView();
     </script>
 </body>
 </html>
