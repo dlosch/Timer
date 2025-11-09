@@ -754,165 +754,9 @@
                 </div>
             </div>
 
-            <!-- View 1.5: 3D Transform Test (inserted after View 1) -->
-            <div class="view" id="view1-3d" style="visibility: hidden;">
-                <div class="container">
-                    <div class="view-title">3D Transform Test</div>
-                    <div class="test-3d-grid">
-                        <div class="test-3d-card parent-perspective">
-                            <div class="test-label">Parent perspective + rotateX</div>
-                            <div class="test-box box-1">A</div>
-                        </div>
-
-                        <div class="test-3d-card inline-perspective">
-                            <div class="test-label">Inline perspective() + rotateX</div>
-                            <div class="test-box box-2">B</div>
-                        </div>
-
-                        <div class="test-3d-card translateZ">
-                            <div class="test-label">translateZ (needs perspective)</div>
-                            <div class="test-box box-3">C</div>
-                        </div>
-
-                        <div class="test-3d-card preserve-3d">
-                            <div class="test-label">preserve-3d / backface</div>
-                            <div class="test-box box-4">
-                                <div class="face face-front">Front</div>
-                                <div class="face face-back">Back</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div style="font-size:14px;color:rgba(255,255,255,0.7);text-align:center;max-width:420px;margin-top:8px;">Tip: open Safari iOS, swipe to this pane and inspect whether each box tilts/appears 3D. Boxes are deliberately simple so you can see which transforms the browser honors.</div>
-                </div>
-            </div>
-
-            <!-- View 1: Custom Timer (existing) -->
-            <div class="view" id="view1" style="visibility: hidden;">
-                <div class="container">
-                    <div class="timer-display">
-                        <svg class="circular-progress" viewBox="0 0 280 280">
-                            <circle class="progress-bg" cx="140" cy="140" r="130"></circle>
-                            <circle class="progress-bar" cx="140" cy="140" r="130" id="progressBar1"
-                                    stroke-dasharray="817" 
-                                    stroke-dashoffset="817"></circle>
-                        </svg>
-                        <div class="time-text" id="timeDisplay1">00:00</div>
-                    </div>
-
-                    <div class="time-picker" id="timePicker1">
-                        <div class="time-input">
-                            <label>Minutes</label>
-                            <div class="picker-container">
-                                <div class="picker-highlight"></div>
-                                <div class="picker-scroll" id="minutesPicker1"></div>
-                            </div>
-                        </div>
-                        <span class="separator">:</span>
-                        <div class="time-input">
-                            <label>Seconds</label>
-                            <div class="picker-container">
-                                <div class="picker-highlight"></div>
-                                <div class="picker-scroll" id="secondsPicker1"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="controls">
-                        <button class="btn btn-reset" id="resetBtn1" disabled>Reset</button>
-                        <button class="btn btn-start" id="startBtn1">Start</button>
-                        <button class="btn btn-pause hidden" id="pauseBtn1">Pause</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- View 2: Predefined Timers -->
-            <div class="view" id="view2" style="visibility: hidden;">
-                <div class="container">
-                    <div class="timer-display">
-                        <svg class="circular-progress" viewBox="0 0 280 280">
-                            <circle class="progress-bg" cx="140" cy="140" r="130"></circle>
-                            <circle class="progress-bar" cx="140" cy="140" r="130" id="progressBar2"
-                                    stroke-dasharray="817" 
-                                    stroke-dashoffset="817"></circle>
-                        </svg>
-                        <div class="time-text" id="timeDisplay2">00:00</div>
-                    </div>
-
-                    <div class="preset-selector">
-                        <select id="presetSelect">
-                            <option value="420">OPD - 7min</option>
-                            <option value="210">OPD - 3min 30sec</option>
-                            <option value="60">OPD - 1min</option>
-                        </select>
-                    </div>
-
-                    <div class="controls">
-                        <button class="btn btn-reset" id="resetBtn2" disabled>Reset</button>
-                        <button class="btn btn-start" id="startBtn2">Start</button>
-                        <button class="btn btn-pause hidden" id="pauseBtn2">Pause</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- View 3: Interval Timer -->
-            <div class="view" id="view3" style="visibility: hidden;">
-                <div class="container">
-                    <div class="timer-display">
-                        <svg class="circular-progress" viewBox="0 0 280 280">
-                            <circle class="progress-bg" cx="140" cy="140" r="130"></circle>
-                            <circle class="progress-bar" cx="140" cy="140" r="130" id="progressBar3"
-                                    stroke-dasharray="817" 
-                                    stroke-dashoffset="817"></circle>
-                        </svg>
-                        <div class="time-text" id="timeDisplay3">00:00</div>
-                    </div>
-
-                    <div class="interval-controls">
-                        <div class="time-input" style="width:100%;max-width:300px;">
-                            <label>Intervals</label>
-                            <div class="picker-container" style="width:100%;">
-                                <div class="picker-highlight"></div>
-                                <div class="picker-scroll" id="intervalPicker3"></div>
-                            </div>
-                        </div>
-                        <div class="interval-status" id="intervalStatus3">Select an interval to start</div>
-                    </div>
-
-                    <div class="controls">
-                        <button class="btn btn-reset" id="resetBtn3" disabled>Reset</button>
-                        <button class="btn btn-start" id="startBtn3">Start</button>
-                        <button class="btn btn-pause hidden" id="pauseBtn3">Pause</button>
-                    </div>
-                </div>
-            </div>
-            <!-- View 4: Analog Stopwatch -->
-            <div class="view" id="view4" style="visibility: hidden;">
-                <div class="container">
-                    <div class="analog-container">
-                        <svg id="analogSvg" class="analog-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="Analog Stopwatch">
-                            <circle cx="100" cy="100" r="96" class="dial-bg"></circle>
-                            <g id="ticks"></g>
-                            <g id="numbers"></g>
-                            <!-- Subdial for minutes (0-30) -->
-                            <circle cx="100" cy="70" r="24" class="subdial"></circle>
-                            <g id="subticks"></g>
-                            <g id="subnumbers"></g>
-                            <!-- Hands -->
-                            <line id="minuteHand" class="hand-minute" x1="100" y1="70" x2="100" y2="54"></line>
-                            <line id="secondHand" class="hand-second" x1="100" y1="100" x2="100" y2="12"></line>
-                            <circle cx="100" cy="100" r="3" class="center-dot"></circle>
-                        </svg>
-                    </div>
-                    <div class="time-text" id="timeDisplay4">00:00.00</div>
-                    <div class="controls">
-                        <button class="btn btn-reset" id="resetBtn4" disabled>Reset</button>
-                        <button class="btn btn-start" id="startBtn4">Start</button>
-                        <button class="btn btn-pause hidden" id="pauseBtn4">Pause</button>
-                    </div>
-                </div>
-            </div>
+           
             <!-- View Docs: Markdown viewer -->
-            <div class="view" id="viewDocs" style="visibility: hidden;">
+            <div class="view" id="viewDocs">
                 <div class="container">
                     <div class="view-title">Docs</div>
                     <div id="docsTabs" style="width:100%;max-width:720px;">
@@ -1019,6 +863,7 @@
             startBtn: document.getElementById('startBtn5'),
             pauseBtn: document.getElementById('pauseBtn5'),
             resetBtn: document.getElementById('resetBtn5'),
+            linearFill: document.getElementById('linearFill5'),
             ticksGroup: document.getElementById('segmentedTicks5'),
             ticksBuilt: false,
 
@@ -1031,44 +876,6 @@
                 const sumW = weights.reduce((a, b) => a + b, 0);
                 let acc = 0;
                 const angles = weights.map(w => { const t = (acc / sumW) * 2 * Math.PI; acc += w; return t; });
-                for (let i = 0; i < N; i++) {
-                    const a = angles[i];
-                    const sin = Math.sin(a), cos = Math.cos(a);
-                    const x1 = cx + rInner * sin;
-                    const y1 = cy - rInner * cos;
-                    const x2 = cx + rOuter * sin;
-                    const y2 = cy - rOuter * cos;
-                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                    line.setAttribute('x1', x1.toFixed(2));
-                    line.setAttribute('y1', y1.toFixed(2));
-                    line.setAttribute('x2', x2.toFixed(2));
-                    line.setAttribute('y2', y2.toFixed(2));
-                    line.setAttribute('stroke', 'rgba(255,255,255,0.22)');
-                    line.setAttribute('stroke-width', '2');
-                    this.ticksGroup.appendChild(line);
-                }
-                this.ticksBuilt = true;
-            },
-            linearFill: document.getElementById('linearFill5'),
-            ticksGroup: document.getElementById('segmentedTicks5'),
-            ticksBuilt: false,
-
-            buildPerspectiveTicks() {
-                if (this.ticksBuilt || !this.ticksGroup) return;
-                const cx = 140, cy = 140, rOuter = 130, rInner = 122;
-                const N = 60; // increments
-                const k = 0.5; // weighting strength (more space at top)
-                // Build weights around the circle (theta=0 at top)
-                const weights = Array.from({ length: N }, (_, i) => 1 + k * Math.cos((i / N) * 2 * Math.PI));
-                const sumW = weights.reduce((a, b) => a + b, 0);
-                // Cumulative angles
-                let acc = 0;
-                const angles = weights.map(w => {
-                    const theta = (acc / sumW) * 2 * Math.PI;
-                    acc += w;
-                    return theta;
-                });
-                // Draw short ticks at computed angles
                 for (let i = 0; i < N; i++) {
                     const a = angles[i];
                     const sin = Math.sin(a), cos = Math.cos(a);
@@ -1496,8 +1303,7 @@
         let touchEndY = 0;
 
         const viewsContainer = document.getElementById('viewsContainer');
-        const pageIndicators = document.querySelectorAll('.page-indicator');
-        const topNav = document.getElementById('topNav');
+    const pageIndicators = document.querySelectorAll('.page-indicator');
         const maxViewIndex = () => document.querySelectorAll('#viewsContainer .view').length - 1;
 
         function updateView() {
