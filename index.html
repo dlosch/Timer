@@ -696,6 +696,27 @@
                 font-size: clamp(70px, 18vw, 120px);
             }
         }
+        /* Docs viewer styles */
+        .docs-tab {
+            background: rgba(255,255,255,0.06);
+            color: rgba(255,255,255,0.9);
+            padding: 8px 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.04);
+            font-size: 14px;
+        }
+
+        .docs-tab.active {
+            background: rgba(255,149,0,0.95);
+            color: #111;
+            border-color: rgba(255,149,0,0.95);
+        }
+
+        .docs-content h1, .docs-content h2, .docs-content h3 { color: #fff; }
+        .docs-content p { color: rgba(255,255,255,0.9); line-height:1.5; }
+        .docs-content code { background: rgba(0,0,0,0.4); padding:2px 6px; border-radius:4px; }
+        .docs-content pre { background: rgba(0,0,0,0.45); padding:12px;border-radius:8px; overflow:auto; }
     </style>
 </head>
 <body>
@@ -890,6 +911,16 @@
                     </div>
                 </div>
             </div>
+            <!-- View Docs: Markdown viewer -->
+            <div class="view" id="viewDocs" style="visibility: hidden;">
+                <div class="container">
+                    <div class="view-title">Docs</div>
+                    <div id="docsTabs" style="width:100%;max-width:720px;">
+                        <div id="docsTabList" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;"></div>
+                        <div id="docsContent" style="background:rgba(0,0,0,0.35);padding:16px;border-radius:12px;max-height:60vh;overflow:auto;color:rgba(255,255,255,0.95);"></div>
+                    </div>
+                </div>
+            </div>
           
         </div>
 
@@ -904,6 +935,7 @@
     </div>
 
     <script src="nosleep.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
         // Global state
         let noSleep = new NoSleep();
@@ -2385,6 +2417,78 @@
         
         document.addEventListener('touchstart', resumeAudioContext, { once: true });
         document.addEventListener('click', resumeAudioContext, { once: true });
+
+        // ==================== DOCS VIEW LOADER ====================
+        async function loadDocsIndex() {
+            try {
+                const res = await fetch('/docs/index.json');
+                if (!res.ok) throw new Error('Could not load docs index');
+                return await res.json();
+            } catch (err) {
+                console.warn('Docs index load failed:', err);
+                return [];
+            }
+        }
+
+        // Use marked.js to render Markdown. Basic sanitization: strip <script> tags from output.
+        function renderMarkdown(md) {
+            try {
+                const html = marked.parse(md || '');
+                // basic strip of script tags to avoid inline scripts
+                const sanitized = html.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '');
+                return `<div class="docs-content">${sanitized}</div>`;
+            } catch (e) {
+                console.warn('marked parse error', e);
+                // fallback to escaped pre
+                const esc = (s) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                return `<div class="docs-content"><pre>${esc(md)}</pre></div>`;
+            }
+        }
+
+        async function initDocsView() {
+            const docsTabList = document.getElementById('docsTabList');
+            const docsContent = document.getElementById('docsContent');
+            if (!docsTabList || !docsContent) return;
+
+            const index = await loadDocsIndex();
+            if (!index || !index.length) {
+                docsContent.innerHTML = '<p>No docs found.</p>';
+                return;
+            }
+
+            let activeBtn = null;
+
+            async function openDoc(entry, btn) {
+                if (activeBtn) activeBtn.classList.remove('active');
+                btn.classList.add('active'); activeBtn = btn;
+                docsContent.innerHTML = '<p>Loading...</p>';
+                try {
+                    const res = await fetch('/docs/' + entry.file);
+                    if (!res.ok) throw new Error('fetch failed');
+                    const md = await res.text();
+                    docsContent.innerHTML = renderMarkdown(md);
+                } catch (err) {
+                    docsContent.innerHTML = `<p>Fehler beim Laden: ${err.message}</p>`;
+                }
+            }
+
+            // Build tab buttons
+            for (const entry of index) {
+                const btn = document.createElement('button');
+                btn.className = 'docs-tab';
+                btn.textContent = entry.title || entry.file;
+                btn.addEventListener('click', () => openDoc(entry, btn));
+                docsTabList.appendChild(btn);
+            }
+
+            // Open first doc
+            const first = index[0];
+            const firstBtn = docsTabList.querySelector('button.docs-tab');
+            if (first && firstBtn) openDoc(first, firstBtn);
+        }
+
+        // Initialize docs view as part of startup
+        initDocsView();
 
         // Register Service Worker for offline functionality
         if ('serviceWorker' in navigator) {
