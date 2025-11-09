@@ -9,7 +9,7 @@ const urlsToCache = [
 ];
 
 // Install Service Worker
-// update 
+// update 2
 self.addEventListener('install', event => {
   // Force the waiting service worker to become the active service worker
   self.skipWaiting();

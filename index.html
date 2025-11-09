@@ -8,6 +8,8 @@
     <meta name="apple-mobile-web-app-title" content="Timer">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
+    <!-- Syntax highlighting theme for Markdown code blocks -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css">
     <title>Timer</title>
     <style>
         * {
@@ -712,11 +714,25 @@
             color: #111;
             border-color: rgba(255,149,0,0.95);
         }
-
-        .docs-content h1, .docs-content h2, .docs-content h3 { color: #fff; }
-        .docs-content p { color: rgba(255,255,255,0.9); line-height:1.5; }
-        .docs-content code { background: rgba(0,0,0,0.4); padding:2px 6px; border-radius:4px; }
-        .docs-content pre { background: rgba(0,0,0,0.45); padding:12px;border-radius:8px; overflow:auto; }
+        .docs-content { color: rgba(255,255,255,0.92); line-height: 1.65; font-size: 16px; }
+        .docs-content h1, .docs-content h2, .docs-content h3, .docs-content h4 { color: #fff; line-height: 1.25; margin: 0.8em 0 0.5em; }
+        .docs-content h1 { font-size: 1.8rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: .3em; }
+        .docs-content h2 { font-size: 1.4rem; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: .25em; }
+        .docs-content h3 { font-size: 1.15rem; }
+        .docs-content p { margin: 0.75em 0; }
+        .docs-content a { color: #5AC8FA; text-decoration: none; }
+        .docs-content a:hover { text-decoration: underline; }
+        .docs-content ul, .docs-content ol { margin: 0.6em 0 0.9em 1.4em; }
+        .docs-content li { margin: 0.25em 0; }
+        .docs-content blockquote { margin: 1em 0; padding: .6em .9em; border-left: 4px solid rgba(255,149,0,0.6); background: rgba(0,0,0,0.35); border-radius: 8px; color: rgba(255,255,255,0.95); }
+        .docs-content code { background: rgba(255,255,255,0.08); padding: 0 .35em; border-radius: 6px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .95em; }
+        .docs-content pre { background: rgba(0,0,0,0.45); padding: 14px; border-radius: 12px; overflow: auto; border: 1px solid rgba(255,255,255,0.08); }
+        .docs-content pre code { background: transparent; padding: 0; }
+        .docs-content table { width: 100%; border-collapse: collapse; margin: 1em 0; }
+        .docs-content thead { background: rgba(255,255,255,0.06); }
+        .docs-content th, .docs-content td { border: 1px solid rgba(255,255,255,0.08); padding: .5em .65em; text-align: left; }
+        .docs-content img { max-width: 100%; height: auto; display: block; margin: 0.5em auto; border-radius: 8px; }
+        .docs-content hr { border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 1.25em 0; }
     </style>
 </head>
 <body>
@@ -761,7 +777,7 @@
                     <div class="view-title">Docs</div>
                     <div id="docsTabs" style="width:100%;max-width:720px;">
                         <div id="docsTabList" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;"></div>
-                        <div id="docsContent" style="background:rgba(0,0,0,0.35);padding:16px;border-radius:12px;max-height:60vh;overflow:auto;color:rgba(255,255,255,0.95);"></div>
+                        <div id="docsContent" class="docs-content" style="background:rgba(0,0,0,0.35);padding:18px;border-radius:12px;max-height:68vh;overflow:auto;"></div>
                     </div>
                 </div>
             </div>
@@ -774,6 +790,7 @@
 
     <script src="nosleep.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
     <script>
         // Global state
         let noSleep = new NoSleep();
@@ -2511,6 +2528,10 @@ Zungenbrecher Blaukraut bleibt Blaukraut`
                     const md = docsData[entry.file];
                     if (!md) throw new Error('Doc not found');
                     docsContent.innerHTML = renderMarkdown(md);
+                    // Highlight code blocks if present
+                    if (window.hljs) {
+                        window.hljs.highlightAll();
+                    }
                 } catch (err) {
                     docsContent.innerHTML = `<p>Fehler beim Laden: ${err.message}</p>`;
                 }
