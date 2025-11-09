@@ -1,11 +1,3 @@
-Das ist die Kernkompetenz. Sie haben die "Überschriften" (die Argumente), jetzt brauchen Sie den "Artikel" dazu.
-
-Hier ist eine systematische Checkliste. Gehen Sie diese Liste für **jedes einzelne Ihrer Argumente** durch. Nehmen wir an, Ihr Argument (Ihre "Überschrift") ist: *"Satire ist in despotischen Systemen die einzige Möglichkeit für Kritik."*
-
-So verwandeln Sie das in einen 2-Minuten-Block:
-
----
-
 ### Checkliste: Vom Argument zum fertigen Rede-Baustein (ARE)
 
 #### A - Argument (Die These)
@@ -61,6 +53,3 @@ Eine 7-Minuten-Rede ist einfach:
     * [ ] Zurück zum "Hook" der Einleitung kommen.
     * [ ] Ein starker Schlusssatz (Appell): "Deshalb..."
 
-Ihr Problem ist nicht das Denken. Ihr Problem ist das "Übersetzen" Ihrer Gedanken in diese starre ARE-Struktur. Üben Sie diese Checkliste. Es ist ein Handwerk, keine Magie.
-
-Wollen wir diese Checkliste einmal probehalber auf ein ganz anderes Thema anwenden, zum Beispiel "Sollten Hausaufgaben abgeschafft werden"?

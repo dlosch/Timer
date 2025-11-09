@@ -1,11 +1,3 @@
-Das ist eine hervorragende Frage, denn die Rollen in einer Offenen Parlamentarischen Debatte (OPD) sind klar definiert. Die Struktur ist Ihr Rettungsanker, besonders wenn Sie mit der Nervosität oder dem "Füllen" der Zeit kämpfen.
-
-Hier ist eine Checkliste für die drei Hauptredetypen. Das Ziel ist, Ihre (guten) Argumente in das "Korsett" der jeweiligen Rolle zu zwängen, damit sie ihre maximale Wirkung entfalten.
-
-Die **ARE-Methode (Argument - Reason - Example)**, die wir besprochen haben, ist das *Werkzeug*, das Sie verwenden, um die Punkte `[Argument 1]` und `[Argument 2]` in diesen Checklisten auszufüllen.
-
----
-
 ### 🏛️ Checkliste 1: Die Regierungsrede (Eröffnend, PRO)
 
 **Ihr Job:** Sie wollen eine Veränderung. Sie haben die **Beweislast**. Sie müssen der Jury beweisen, dass (A) der aktuelle Zustand (Status Quo) ein Problem hat und (B) Ihr Antrag (die Maßnahme) dieses Problem löst.
@@ -97,7 +89,3 @@ Die **ARE-Methode (Argument - Reason - Example)**, die wir besprochen haben, ist
 * `[ ]` **4. Abwägung & Schluss (ca. 1 Min.)**
     * **Warum ist Ihr Punkt wichtiger?** "Wenn wir meinen Punkt [Argument] berücksichtigen, sehen wir, dass die Argumente der Regierung [schwächer/stärker] werden, *weil*..."
     * **Appell (Ihr Urteil):** "Deshalb, nach Abwägung aller Punkte – und insbesondere meines Punktes – müssen wir diesen Antrag [annehmen/ablehnen]."
-
----
-
-Möchten Sie, dass wir eine dieser Checklisten nehmen und sie mit einem neuen Thema probeweise "befüllen"?
