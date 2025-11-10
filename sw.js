@@ -1,5 +1,5 @@
-// Bump CACHE_NAME to trigger re-install when sw logic changes
-const CACHE_NAME = 'timer-v3';
+// Bump CACHE_NAME to trigger re-install when sw logic or assets change
+const CACHE_NAME = 'timer-v4';
 const urlsToCache = [
   './index.html',
   './manifest.json',
@@ -15,7 +15,7 @@ const urlsToCache = [
   './marked.js'
 ];
 
-// Install Service Worker v20251108T1302
+// Install Service Worker v20251110
 self.addEventListener('install', event => {
   // Force the waiting service worker to become the active service worker
   self.skipWaiting();

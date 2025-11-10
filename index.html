@@ -2261,13 +2261,64 @@
         document.addEventListener('click', resumeAudioContext, { once: true });
 
         // ==================== DOCS VIEW LOADER ====================
-        function renderMarkdown(md) {
+        // Load a script once by URL
+        function loadScriptOnce(src) {
+            return new Promise((resolve, reject) => {
+                // If already present, resolve immediately
+                if ([...document.scripts].some(s => s.src === src)) {
+                    resolve();
+                    return;
+                }
+                const s = document.createElement('script');
+                s.src = src;
+                s.async = true;
+                s.onload = () => resolve();
+                s.onerror = (e) => reject(new Error(`Failed to load script: ${src}`));
+                document.head.appendChild(s);
+            });
+        }
+
+        // Robust Markdown renderer with fallback to markdown-it
+        async function renderMarkdown(md) {
+            // Prefer window.marked if available and working
             try {
-                return marked.parse(md);
+                if (window.marked && typeof window.marked.parse === 'function') {
+                    return window.marked.parse(md);
+                }
             } catch (e) {
-                console.error('Markdown render error:', e);
-                return `<pre>${md.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</pre>`;
+                console.warn('marked.parse failed, falling back to markdown-it:', e);
             }
+
+            // Fallback: load markdown-it on demand and render
+            try {
+                if (!window.markdownit) {
+                    await loadScriptOnce('https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js');
+                }
+                if (window.markdownit) {
+                    const mdIt = window.markdownit({
+                        html: false,
+                        linkify: true,
+                        breaks: false,
+                        highlight: function (str, lang) {
+                            try {
+                                if (window.hljs) {
+                                    if (lang && window.hljs.getLanguage(lang)) {
+                                        return window.hljs.highlight(str, { language: lang }).value;
+                                    }
+                                    return window.hljs.highlightAuto(str).value;
+                                }
+                            } catch (_) { /* noop */ }
+                            return '';
+                        }
+                    });
+                    return mdIt.render(md);
+                }
+            } catch (e) {
+                console.warn('markdown-it fallback failed:', e);
+            }
+
+            // Last resort: show escaped source
+            return `<pre>${md.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</pre>`;
         }
 
         async function loadDocsIndex() {
@@ -2301,11 +2352,20 @@
                 btn.classList.add('active'); activeBtn = btn;
                 docsContent.innerHTML = '<p>Loading...</p>';
                 try {
-                    const cache = await caches.open('timer-v3');
-                    const response = await cache.match(`./docs/${entry.file}`);
-                    if (!response) throw new Error('Doc not found in cache');
+                    const path = `./docs/${entry.file}`;
+                    let response = null;
+                    try {
+                        // Try cache first for offline support
+                        const cache = await caches.open('timer-v3');
+                        response = await cache.match(path);
+                    } catch (_) { /* cache may be unavailable */ }
+                    if (!response) {
+                        // Fallback to network (SW will still cache as configured)
+                        response = await fetch(path);
+                    }
+                    if (!response || !response.ok) throw new Error('Doc not found');
                     const md = await response.text();
-                    docsContent.innerHTML = renderMarkdown(md);
+                    docsContent.innerHTML = await renderMarkdown(md);
                     // Highlight code blocks if present
                     if (window.hljs) {
                         window.hljs.highlightAll();

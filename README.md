@@ -10,6 +10,7 @@ A iOS-style countdown timer. 100% GitHub Copilot agent. uses https://github.com/
 - 🔒 **Screen Wake Lock**: Prevents screen from sleeping while timer is running
 - 🎨 **Sleek Design**: Clean, modern interface inspired by iOS Timer app
 - 📱 **Responsive**: Works perfectly on mobile and desktop
+- 📚 **Built-in Docs Viewer**: Renders Markdown files from `/docs` with syntax highlighting, works offline
 
 ## Installation on iOS
 
@@ -27,6 +28,21 @@ A iOS-style countdown timer. 100% GitHub Copilot agent. uses https://github.com/
 3. **Pause**: Tap "Pause" to temporarily stop the timer
 4. **Resume**: Tap "Start" again to resume from where you paused
 5. **Reset**: Tap "Reset" to clear the timer and start over
+
+### Docs view
+
+Open the "Docs" view to read Markdown documents from `/docs`:
+
+- The list of documents comes from `docs/index.json` (array of `{ file, title }`).
+- Files are fetched from `./docs/` and rendered to HTML.
+- Code blocks are highlighted via highlight.js.
+- Works offline through the service worker cache.
+
+Renderer details:
+
+- Prefers the bundled `marked.js` (or CDN `marked`) if present.
+- If `marked` is missing or fails, it automatically falls back to `markdown-it` via CDN.
+- When all else fails, it shows escaped source in a `<pre>` block so content remains visible.
 
 ## Deployment
 
@@ -49,6 +65,12 @@ This is a static HTML application. To deploy:
 - The app registers a service worker from `sw.js` on page load. You'll see "Service worker registered" and then "Opened cache" in the console when it precaches the app shell and docs files.
 - If you change `sw.js` or the list of cached files, bump the cache name (`CACHE_NAME`) to force an update, or rely on the browser detecting the SW code change.
 - When testing locally, serve over HTTP(S); file:// URLs won't register a service worker. A simple static server is enough.
+
+Adding docs:
+
+1. Put your `.md` file into `docs/` (e.g., `MyNote.md`).
+2. Add an entry to `docs/index.json`: `{ "file": "MyNote.md", "title": "My Note" }`.
+3. Optionally add the file path to the `urlsToCache` array in `sw.js` to ensure it's precached for offline use, then bump `CACHE_NAME`.
 
 ## Technical Details
 
