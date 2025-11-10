@@ -5,13 +5,7 @@ const urlsToCache = [
   './nosleep.min.js',
   './icon-192.png',
   './icon-512.png',
-  './icon.png',
-  './docs/Argumente-Gemini25pro.md',
-  './docs/OPD-Gemini25pro.md',
-  './docs/Rhetorik-Checkliste-Gemini25pro.md',
-  './docs/Rhetorik-Gemini25pro.md',
-  './docs/index.json',
-  './marked.js' // Add marked.js to the cache
+  './icon.png'
 ];
 
 // Install Service Worker v20251108T1302
