@@ -44,6 +44,12 @@ This is a static HTML application. To deploy:
    - Vercel
    - Any HTTP server
 
+### Offline/PWA notes
+
+- The app registers a service worker from `sw.js` on page load. You'll see "Service worker registered" and then "Opened cache" in the console when it precaches the app shell and docs files.
+- If you change `sw.js` or the list of cached files, bump the cache name (`CACHE_NAME`) to force an update, or rely on the browser detecting the SW code change.
+- When testing locally, serve over HTTP(S); file:// URLs won't register a service worker. A simple static server is enough.
+
 ## Technical Details
 
 - **No dependencies**: Pure HTML, CSS, and JavaScript
