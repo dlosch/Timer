@@ -14,8 +14,7 @@ const urlsToCache = [
   '/marked.js' // Add marked.js to the cache
 ];
 
-// Install Service Worker
-// update docs 2
+// Install Service Worker v20251108T1302
 self.addEventListener('install', event => {
   // Force the waiting service worker to become the active service worker
   self.skipWaiting();
@@ -32,40 +31,37 @@ self.addEventListener('install', event => {
   );
 });
 
+
 // Fetch from cache, fallback to network
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        if (response) {
-          return response;
-        }
-        
-        // For navigation requests (including root path), try to return index.html
+    caches.match(event.request).then(response => {
+      if (response) {
+        return response;
+      }
+
+      // For navigation requests (including root path), try to return index.html
+      if (event.request.mode === 'navigate') {
+        return caches.match('./index.html').then(indexResponse => {
+          if (indexResponse) {
+            return indexResponse;
+          }
+          return fetch(event.request);
+        });
+      }
+
+      return fetch(event.request).catch(() => {
+        // If fetch fails and it's a navigation request, return index.html from cache
         if (event.request.mode === 'navigate') {
-          return caches.match('./index.html')
-            .then(indexResponse => {
-              if (indexResponse) {
-                return indexResponse;
-              }
-              return fetch(event.request);
-            });
+          return caches.match('./index.html');
         }
-        
-        return fetch(event.request)
-          .catch(() => {
-            // If fetch fails and it's a navigation request, return index.html from cache
-            if (event.request.mode === 'navigate') {
-              return caches.match('./index.html');
-            }
-          });
-      })
+      });
+    })
   );
 });
 
 // Activate and clean up old caches
 self.addEventListener('activate', event => {
-  // Take control immediately
   event.waitUntil(
     Promise.all([
       self.clients.claim(),
